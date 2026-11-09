@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>AtlasMove App Prototype</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230d302b'/%3E%3Cpath fill='%23b9ef59' d='M16 46 27.5 17h9L48 46h-9.2l-1.7-5.3H26.7L25 46H16Zm13.2-13h5.4l-2.7-8.7-2.7 8.7Z'/%3E%3Ccircle cx='48.5' cy='17' r='3.5' fill='%23f7f8f3'/%3E%3C/svg%3E">
+<style>
+/* Layout idea: a dark test rail beside two phones running one app. Everything a real user would not see stays in the rail. */
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --navy: #102c28; --navy-2: #173d37; --lime: #b9e85e; --green: #137d5a; --green-soft: #e1f2e9;
+  --ink: #172522; --muted: #5f6f69; --line: #dfe6e2; --paper: #f3f5f2; --white: #fff;
+  --amber: #a5660f; --amber-soft: #fff3d9; --red: #b5442f; --red-soft: #fbe9e5; --wa: #1f8f55;
+  --shadow: 0 16px 42px rgba(17,45,41,.1), 0 2px 8px rgba(17,45,41,.05);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 14px/1.45 var(--font); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid #5c9e22; outline-offset: 2px; }
+h1, h2, h3, p { margin: 0; text-wrap: balance; }
+small { font-size: 12px; }
+svg.i { width: 1.15em; height: 1.15em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.2em; }
+
+/* Logo: exact rules from .public-wordmark in app/globals.css */
+.wordmark { display: grid; width: 154px; flex: none; }
+.wordmark > span { display: flex; align-items: baseline; color: #102c28; font-size: 24px; font-weight: 800; letter-spacing: -.06em; line-height: .9; }
+.wordmark b { font-weight: inherit; }
+.wordmark b:last-child { color: #6da637; }
+.wordmark svg { width: 100%; height: 15px; margin-top: 3px; overflow: visible; color: #78ad3f; }
+.wordmark path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.wordmark circle { fill: #f7f8f4; stroke: currentColor; stroke-width: 2.2; }
+.wordmark.inverse > span { color: #fff; }
+.wordmark.inverse b:last-child { color: #b9e85e; }
+.wordmark.inverse svg { color: #b9e85e; }
+.wordmark.inverse circle { fill: #102c28; }
+.wordmark.sm { width: 137px; }
+.wordmark.sm > span { font-size: 22px; }
+.appmark { width: 32px; height: 32px; flex: none; display: block; }
+
+/* Test rail */
+.shell { height: 100%; display: grid; grid-template-columns: 318px 1fr; }
+.rail { background: var(--navy); color: #fff; display: flex; flex-direction: column; min-height: 0; }
+.rail-head { padding: 18px 18px 12px; display: grid; gap: 10px; }
+.rail-head p { color: #c8d8d2; font-size: 12.5px; }
+.progress { display: grid; gap: 5px; font-size: 12px; color: #d9e9e2; }
+.progress div { height: 6px; border-radius: 99px; background: rgba(255,255,255,.14); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--lime); border-radius: inherit; transition: width .3s; }
+.rail-btns { display: flex; gap: 8px; }
+.rbtn { border: 1px solid rgba(255,255,255,.24); border-radius: 999px; padding: 6px 11px; color: #fff; font-size: 12px; font-weight: 650; }
+.rbtn:hover { background: rgba(255,255,255,.1); }
+.rbtn.lime { background: var(--lime); border-color: var(--lime); color: var(--navy); }
+.rail-scroll { overflow-y: auto; padding: 0 12px 24px; flex: 1; min-height: 0; }
+.rsec { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--lime); text-transform: uppercase; padding: 14px 6px 6px; }
+.rcard { background: rgba(255,255,255,.07); border-radius: 13px; padding: 10px; display: grid; gap: 8px; font-size: 12.5px; color: #e6efeb; }
+.rcard + .rcard { margin-top: 8px; }
+.rcard strong { color: #fff; font-size: 12.5px; }
+.rcard small { color: #bcd0c9; }
+.rbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+.rrow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rrow > span { flex: 1 1 130px; min-width: 0; }
+.feat { width: 100%; display: grid; grid-template-columns: 34px 1fr auto; gap: 6px; align-items: center; text-align: left; padding: 6px 8px; border-radius: 10px; color: #e6efeb; font-size: 12.5px; }
+.feat:hover { background: rgba(255,255,255,.08); }
+.feat.on { background: rgba(185,232,94,.16); color: #fff; }
+.feat code { font: 700 11px var(--font); color: #b6c9c2; }
+.feat em { font-style: normal; font-size: 10.5px; font-weight: 700; color: #a9beb6; }
+.feat em.seen { color: var(--lime); }
+
+/* Stage */
+.stage { min-width: 0; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+.stage-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 20px; border-bottom: 1px solid var(--line); background: #fff; }
+.stage-top p { color: var(--muted); font-size: 12.5px; flex: 1; min-width: 180px; }
+.seg { display: none; background: var(--paper); border-radius: 999px; padding: 3px; }
+.seg button { padding: 6px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 650; color: var(--muted); }
+.seg button.on { background: var(--navy); color: #fff; }
+.menu-btn { display: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 650; }
+.test-pill { background: var(--amber-soft); color: var(--amber); border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 800; letter-spacing: .04em; }
+.phones { flex: 1; display: flex; justify-content: center; gap: 28px; padding: 14px 20px 22px; flex-wrap: wrap; align-items: flex-start; }
+.device { display: grid; gap: 7px; justify-items: center; }
+.device-label { font-size: 12.5px; font-weight: 700; color: var(--navy-2); }
+.phone { width: 380px; height: 770px; background: var(--navy); border-radius: 46px; padding: 9px; box-shadow: var(--shadow); }
+.screen { position: relative; width: 100%; height: 100%; background: var(--paper); border-radius: 38px; overflow: hidden; display: flex; flex-direction: column; }
+.homebar { position: absolute; bottom: 6px; left: 50%; width: 118px; height: 4px; margin-left: -59px; border-radius: 9px; background: rgba(16,44,40,.55); z-index: 9; pointer-events: none; }
+.homebar.light { background: rgba(255,255,255,.75); }
+
+/* App chrome */
+.sbar { display: flex; justify-content: space-between; align-items: center; padding: 11px 26px 4px; font-size: 12.5px; font-weight: 700; background: #fff; flex: none; }
+.sbar.dark { background: var(--navy); color: #fff; }
+.sbar.paper { background: var(--paper); }
+.sbar span:last-child { display: flex; align-items: center; gap: 5px; }
+.ahead { display: flex; align-items: center; gap: 10px; padding: 7px 16px 11px; background: #fff; border-bottom: 1px solid var(--line); min-height: 52px; flex: none; }
+.ahead.dark { background: var(--navy); color: #fff; border: 0; }
+.ahead h1 { font-size: 18px; letter-spacing: -.025em; flex: 1; min-width: 0; }
+.iconbtn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--paper); color: var(--navy); position: relative; flex: none; font-size: 15px; }
+.ahead.dark .iconbtn { background: rgba(255,255,255,.12); color: #fff; }
+.badge { position: absolute; top: -2px; right: -2px; min-width: 17px; height: 17px; border-radius: 99px; background: var(--red); color: #fff; font-size: 10.5px; font-weight: 800; display: grid; place-items: center; padding: 0 4px; }
+.body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.body > * { flex: none; }
+.body.enter { animation: enter .22s ease-out; }
+@keyframes enter { from { transform: translateX(12px); opacity: .55; } to { transform: none; opacity: 1; } }
+.foot { padding: 12px 14px 18px; background: #fff; border-top: 1px solid var(--line); display: grid; gap: 8px; flex: none; }
+.tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: #fff; border-top: 1px solid var(--line); padding: 7px 8px 18px; flex: none; }
+.tabs button { display: grid; justify-items: center; gap: 2px; font-size: 11px; font-weight: 650; color: var(--muted); padding: 4px 0; position: relative; }
+.tabs button svg.i { font-size: 17px; }
+.tabs button.on { color: var(--green); }
+.tabs .badge { right: 22%; top: 0; }
+.modebar { display: flex; align-items: center; gap: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 650; flex: none; width: 100%; text-align: left; background: var(--amber-soft); color: #76490a; }
+.modebar.live { background: var(--green-soft); color: #14513d; }
+.pdot { width: 8px; height: 8px; border-radius: 50%; background: #1aa576; box-shadow: 0 0 0 4px rgba(26,165,118,.15); flex: none; }
+.pdot.off { background: #a5660f; box-shadow: 0 0 0 4px rgba(165,102,15,.15); }
+
+/* Splash */
+.splash { position: absolute; inset: 0; background: var(--navy); display: grid; place-items: center; z-index: 20; color: #fff; }
+.splash-in { display: grid; justify-items: center; gap: 22px; }
+.splash .big { width: 96px; height: 96px; animation: pop .6s cubic-bezier(.2,1.4,.4,1) both; border-radius: 26px; }
+.splash .word { display: flex; font-size: 34px; font-weight: 800; letter-spacing: -.06em; animation: rise .5s .35s ease-out both; }
+.splash .word b { font-weight: 800; }
+.splash .word b + b { color: var(--lime); }
+.splash svg.road { width: 220px; height: 22px; overflow: visible; }
+.splash svg.road path { fill: none; stroke: var(--lime); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 220; stroke-dashoffset: 220; animation: draw 1.1s .6s ease-in-out forwards; }
+.splash svg.road circle { fill: var(--navy); stroke: var(--lime); stroke-width: 3; opacity: 0; animation: dot .3s 1.6s ease-out forwards; }
+.splash small { color: #bcd0c9; animation: rise .5s .8s ease-out both; }
+@keyframes pop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes rise { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes dot { from { opacity: 0; transform: scale(.4); transform-origin: center; transform-box: fill-box; } to { opacity: 1; transform: scale(1); transform-origin: center; transform-box: fill-box; } }
+
+/* Components */
+.card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 15px; display: grid; gap: 10px; }
+.card.navy { background: var(--navy); color: #fff; border: 0; }
+.card.navy p { color: #cfe0da; }
+.kicker { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--green); text-transform: uppercase; }
+.navy .kicker { color: var(--lime); }
+h2 { font-size: 21px; line-height: 1.15; letter-spacing: -.03em; }
+h3 { font-size: 15px; letter-spacing: -.015em; }
+.muted { color: var(--muted); font-size: 13px; }
+.pill { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; min-height: 46px; padding: 10px 18px; border-radius: 999px; font-weight: 750; font-size: 14.5px; text-align: center; }
+.pill.lime { background: var(--lime); color: var(--navy); }
+.pill.lime:hover:not(:disabled) { background: #acdf4b; }
+.pill.dark { background: var(--navy-2); color: #fff; }
+.pill.dark:hover:not(:disabled) { background: var(--navy); }
+.pill.wa { background: var(--wa); color: #fff; }
+.pill.wa:hover:not(:disabled) { background: #1a7c49; }
+.pill.ghost { background: #fff; border: 1px solid #cdd8d2; color: var(--navy); }
+.pill.ghostd { background: transparent; border: 1px solid rgba(255,255,255,.35); color: #fff; }
+.pill.danger { background: #fff; border: 1px solid #e6b9ae; color: var(--red); }
+.pill:disabled { background: #e3e8e5; color: #66746f; border: 0; }
+.pill.sm { min-height: 36px; padding: 6px 13px; font-size: 13px; width: auto; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row.top { align-items: flex-start; }
+.grow { flex: 1; min-width: 0; }
+.list { display: grid; gap: 8px; }
+.item { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 15px; padding: 11px 12px; }
+button.item:hover { border-color: #a9bdb4; }
+.item strong { display: block; font-size: 14px; }
+.item small { display: block; color: var(--muted); }
+.dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--paper); color: var(--navy); flex: none; font-weight: 800; font-size: 13px; }
+.dot.done { background: var(--green); color: #fff; }
+.dot.fail { background: var(--red); color: #fff; }
+.dot.now { background: var(--lime); color: var(--navy); }
+.dot.wa { background: var(--wa); color: #fff; }
+.tag { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 3px 9px; font-size: 11px; font-weight: 750; background: var(--green-soft); color: #0f6b4c; white-space: nowrap; }
+.tag.amber { background: var(--amber-soft); color: var(--amber); }
+.tag.red { background: var(--red-soft); color: var(--red); }
+.tag.grey { background: #eaeeec; color: #4e5d58; }
+.note { display: flex; gap: 9px; padding: 11px 12px; border-radius: 14px; font-size: 13px; background: var(--green-soft); color: #14513d; }
+.note.amber { background: var(--amber-soft); color: #76490a; }
+.note.red { background: var(--red-soft); color: #8a2f1e; }
+.note.grey { background: #eaeeec; color: #3f4e49; }
+.field { display: grid; gap: 4px; }
+.field > span:not(.phonefield) { font-size: 12.5px; font-weight: 650; color: #33453f; }
+.field input, .field select, .field textarea { width: 100%; background: #fff; border: 1px solid #cdd8d2; border-radius: 12px; padding: 10px 11px; min-height: 44px; }
+.field textarea { min-height: 72px; resize: vertical; }
+.field.err input, .field.err select { border-color: var(--red); }
+.field em { font-style: normal; font-size: 12px; color: var(--red); }
+.phonefield { display: flex; gap: 8px; align-items: stretch; }
+.phonefield b { display: grid; place-items: center; flex: none; min-height: 44px; padding: 0 12px; background: #fff; border: 1px solid #cdd8d2; border-radius: 12px; font-weight: 700; }
+.phonefield input { flex: 1; min-width: 0; }
+.otp input { text-align: center; font-size: 26px; font-weight: 800; letter-spacing: .32em; min-height: 58px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { border: 1px solid #cdd8d2; background: #fff; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; }
+.chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.facts small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.navy .facts small { color: #b9cdc6; }
+.facts strong { font-size: 13.5px; overflow-wrap: anywhere; }
+.steps { display: flex; gap: 5px; }
+.steps i { flex: 1; height: 5px; border-radius: 99px; background: #dbe3df; }
+.steps i.on { background: var(--green); }
+.check { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 10px 12px; }
+.box { width: 24px; height: 24px; border-radius: 8px; border: 2px solid #b7c5be; display: grid; place-items: center; color: #fff; flex: none; font-size: 12px; }
+.check.on .box { background: var(--green); border-color: var(--green); }
+.switch { width: 44px; height: 26px; border-radius: 99px; background: #cfd9d4; position: relative; flex: none; }
+.switch::after { content: ""; position: absolute; width: 22px; height: 22px; top: 2px; left: 2px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.switch.on { background: var(--green); }
+.switch.on::after { left: 20px; }
+.photos { display: flex; gap: 8px; flex-wrap: wrap; }
+.photo { width: 68px; height: 68px; border-radius: 12px; overflow: hidden; display: grid; place-items: center; }
+.photo svg.shot { width: 100%; height: 100%; display: block; }
+.photo.add { background: #fff; border: 1.5px dashed #a9bdb4; color: var(--green); font-size: 18px; }
+.sig { width: 100%; height: 130px; background: #fff; border: 1.5px dashed #a9bdb4; border-radius: 14px; touch-action: none; display: block; }
+.sigview { width: 100%; height: 110px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+.viewfinder { height: 300px; border-radius: 20px; background: radial-gradient(circle at 50% 40%, #2e4a43, #0a1c19); color: #fff; display: grid; place-items: center; position: relative; overflow: hidden; }
+.frame { width: 170px; height: 170px; border-radius: 18px; border: 3px solid var(--lime); position: relative; overflow: hidden; }
+.frame::after { content: ""; position: absolute; left: 6px; right: 6px; height: 2px; background: var(--lime); box-shadow: 0 0 12px var(--lime); top: 8px; animation: scanline 1.8s ease-in-out infinite alternate; }
+@keyframes scanline { to { top: calc(100% - 10px); } }
+.viewfinder > span { position: absolute; bottom: 14px; font-size: 13px; color: #e2eee9; text-align: center; left: 12px; right: 12px; }
+.camera { background: #0a1c19; color: #fff; }
+.camera .viewfinder { height: 330px; }
+.shutter { width: 66px; height: 66px; border-radius: 50%; background: #fff; border: 5px solid #8aa59b; justify-self: center; }
+.stageflow { display: grid; grid-template-columns: repeat(5, 1fr); position: relative; }
+.stageflow::before { content: ""; position: absolute; top: 9px; left: 10%; right: 10%; height: 3px; background: #dfe7e2; border-radius: 9px; }
+.stageflow .fill { position: absolute; top: 9px; left: 10%; height: 3px; background: #1b9a70; border-radius: 9px; transition: width .5s; }
+.stageflow div { position: relative; display: grid; justify-items: center; gap: 5px; text-align: center; font-size: 10.5px; font-weight: 700; color: #6f7e79; }
+.stageflow i { width: 20px; height: 20px; border-radius: 50%; border: 3px solid #fff; background: #dfe7e2; box-shadow: 0 0 0 1px #d3ddd7; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 9px; }
+.stageflow .complete i { background: #1b9a70; box-shadow: 0 0 0 1px #1b9a70; }
+.stageflow .current i { background: var(--lime); box-shadow: 0 0 0 1px #8dbd3a, 0 0 0 5px rgba(185,232,94,.22); }
+.stageflow .complete, .stageflow .current { color: #24483e; }
+.map { border-radius: 18px; overflow: hidden; border: 1px solid var(--line); background: #e8efeb; }
+.map.hero { margin: -14px -14px 0; border-radius: 0; border-width: 0 0 1px; }
+.map svg { display: block; width: 100%; height: 230px; }
+.map footer { background: #fff; padding: 10px 13px; font-size: 12.5px; display: flex; justify-content: space-between; gap: 8px; }
+.stars { display: flex; gap: 6px; }
+.stars button { width: 42px; height: 42px; font-size: 24px; color: #c9d4cf; }
+.stars button.on { color: #d99a1c; }
+.bubble { max-width: 82%; padding: 9px 12px; border-radius: 15px; font-size: 13.5px; background: #fff; border: 1px solid var(--line); align-self: flex-start; }
+.bubble.me { align-self: flex-end; background: var(--navy-2); color: #fff; border: 0; }
+.bubble small { display: block; opacity: .75; font-size: 11px; margin-top: 2px; }
+.price { font-size: 38px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+.lines { display: grid; gap: 5px; font-size: 13px; }
+.lines div { display: flex; justify-content: space-between; gap: 10px; }
+.hero-img { margin: -15px -15px 2px; height: 150px; overflow: hidden; border-radius: 20px 20px 0 0; }
+.hero-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sheet-wrap { position: absolute; inset: 0; background: rgba(16,44,40,.45); display: flex; align-items: flex-end; z-index: 7; }
+.sheet { background: #fff; width: 100%; border-radius: 24px 24px 0 0; padding: 18px 16px 26px; display: grid; gap: 11px; max-height: 90%; overflow-y: auto; }
+.sheet.camera { background: #0a1c19; color: #fff; max-height: 100%; }
+.toast { position: absolute; left: 10px; right: 10px; top: 42px; z-index: 8; background: var(--navy); color: #fff; border-radius: 16px; padding: 11px 13px; font-size: 13px; box-shadow: 0 14px 34px rgba(16,44,40,.3); display: flex; gap: 9px; text-align: left; width: calc(100% - 20px); animation: rise .2s ease-out; }
+.toast svg.i { color: var(--lime); }
+.toast strong { display: block; }
+.toast.wa { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.toast.wa .dot { width: 30px; height: 30px; }
+.busy { position: absolute; inset: 0; z-index: 10; background: rgba(243,245,242,.82); display: grid; place-items: center; align-content: center; gap: 12px; font-weight: 700; color: var(--navy); }
+.spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #cdd8d2; border-top-color: var(--green); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.setrow { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; padding: 12px 13px; background: #fff; }
+.setgroup { background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.setrow + .setrow { border-top: 1px solid var(--line); }
+.setrow strong { display: block; font-size: 14px; }
+.setrow small { display: block; color: var(--muted); }
+.setrow.red { color: var(--red); }
+.loginbg { background: var(--navy); }
+
+@media (max-width: 1160px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail { position: fixed; inset: 0 auto 0 0; width: 318px; z-index: 40; transform: translateX(-100%); transition: transform .2s; }
+  .shell.menu .rail { transform: none; box-shadow: 0 0 60px rgba(0,0,0,.4); }
+  .menu-btn { display: inline-flex; }
+}
+@media (max-width: 860px) {
+  .seg { display: inline-flex; }
+  .stage-top p { display: none; }
+  .phones { padding: 10px 0 0; gap: 0; }
+  .shell[data-view="a"] .device.b, .shell[data-view="b"] .device.a { display: none; }
+}
+@media (max-width: 430px) {
+  .stage { overflow: hidden; }
+  .phones { padding: 0; display: block; flex: 1; min-height: 0; }
+  .device { height: 100%; display: block; }
+  .device-label { display: none; }
+  .phone { width: 100%; height: 100%; padding: 0; border-radius: 0; box-shadow: none; }
+  .screen { border-radius: 0; }
+  .sbar, .homebar { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } .splash svg.road path { stroke-dashoffset: 0; } .splash svg.road circle { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="shell" id="shell" data-view="a">
+  <aside class="rail" aria-label="Test panel">
+    <div class="rail-head">
+      <div class="wordmark inverse sm" role="img" aria-label="AtlasMove"><span aria-hidden="true"><b>Atlas</b><b>Move</b></span><svg viewBox="0 0 154 15" aria-hidden="true"><path d="M2 5.5C21 5.5 23 12 42 12S64 3 83 4.5s20 7 38 5.5 20-7 27-5"/><circle cx="149" cy="5" r="3.5"/></svg></div>
+      <p>Test panel. Real users never see this side.</p>
+      <div class="progress"><span id="prog-text"></span><div><i id="prog-bar"></i></div></div>
+      <div class="rail-btns"><button class="rbtn lime" type="button" data-a="story">Run main story</button><button class="rbtn" type="button" data-a="reset">Start again</button></div>
+    </div>
+    <div class="rail-scroll" id="rail"></div>
+  </aside>
+  <main class="stage">
+    <div class="stage-top">
+      <button class="menu-btn" type="button" data-a="menu">Test panel</button>
+      <span class="test-pill">TEST DATA · NOTHING IS REAL</span>
+      <p id="onscreen"></p>
+    </div>
+    <div class="phones">
+      <section class="device a" aria-label="Phone"><div class="device-label" id="label-a">Phone</div><div class="phone"><div class="screen" id="phone-a" data-phone="a"></div></div></section>
+    </div>
+  </main>
+</div>
+
+<script>
+"use strict";
+/* ---------- Icons and logo ---------- */
+const PATHS = {
+  truck:'<path d="M14 18V6H2v12h2"/><path d="M14 9h4l4 4v5h-2"/><path d="M9 18h6"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="18" r="2.5"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>', x:'<path d="M18 6 6 18M6 6l12 12"/>', back:'<path d="m15 18-6-6 6-6"/>', next:'<path d="m9 18 6-6-6-6"/>',
+  cam:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="3"/>',
+  phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>',
+  nav:'<path d="m3 11 19-9-9 19-2-8-8-2Z"/>', scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+  qr:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM21 14v.01M21 21h-4v-1M14 21v-.01"/>',
+  msg:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>', clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', alert:'<path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/>',
+  shield:'<path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3Z"/><path d="m9 12 2 2 4-4"/>', home:'<path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22v-8h6v8"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>', box:'<path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/>', help:'<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>',
+  card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>', off:'<path d="m2 2 20 20"/><path d="M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5-2.7M19 13a10 10 0 0 0-3-2M12 20h.01"/>',
+  on:'<path d="M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0M2 8.8a15 15 0 0 1 20 0M12 20h.01"/>', lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h6M9 13h6M9 17h6"/>', play:'<path d="m6 3 14 9-14 9Z"/>',
+  flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/>', hist:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>', users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>', gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
+  swap:'<path d="M17 3l4 4-4 4"/><path d="M21 7H9M7 21l-4-4 4-4"/><path d="M3 17h12"/>', mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>'
+};
+const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${PATHS[n]||""}</svg>`;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n => "£" + Number(n).toFixed(2);
+const pad = n => String(n).padStart(2, "0");
+const logo = (inverse, small=true) => `<div class="wordmark${inverse?" inverse":""}${small?" sm":""}" role="img" aria-label="AtlasMove"><span aria-hidden="true"><b>Atlas</b><b>Move</b></span><svg viewBox="0 0 154 15" aria-hidden="true"><path d="M2 5.5C21 5.5 23 12 42 12S64 3 83 4.5s20 7 38 5.5 20-7 27-5"/><circle cx="149" cy="5" r="3.5"/></svg></div>`;
+const appMark = (cls="appmark") => `<svg class="${cls}" viewBox="0 0 64 64" role="img" aria-label="AtlasMove"><rect width="64" height="64" rx="18" fill="#0d302b"/><path fill="#b9ef59" d="M16 46 27.5 17h9L48 46h-9.2l-1.7-5.3H26.7L25 46H16Zm13.2-13h5.4l-2.7-8.7-2.7 8.7Z"/><circle cx="48.5" cy="17" r="3.5" fill="#f7f8f3"/></svg>`;
+const shot = i => { const s = ["#b8c7bf","#c9b8a3","#a9bcc8"][i%3]; return `<svg class="shot" viewBox="0 0 68 68" role="img" aria-label="Photo ${i+1}"><rect width="68" height="68" fill="${s}"/><rect y="48" width="68" height="20" fill="#7c8a84"/><rect x="${10+i*5%20}" y="16" width="26" height="40" rx="2" fill="#5d4a39"/><circle cx="${32+i*5%20}" cy="38" r="1.6" fill="#e6c76a"/><rect x="42" y="36" width="20" height="22" rx="3" fill="#2f5d52"/></svg>`; };
+
+/* ---------- Feature catalogue ---------- */
+const FEATURES = {
+  "Sign-in and account": [["A1","Animated splash","V1"],["A2","WhatsApp mobile login","V1"],["A3","Customer sign-up","V1"],["A4","Guest mode","V1"],["A5","Settings and email later","V1"],["A6","Choose and switch role","V1"],["A7","Driver access from portal","V1"]],
+  "Truck driver": [["D1","Secure driver sign-in","V1"],["D2","Today's route","V1"],["D3","Stop details","V1"],["D4","Navigation","V1"],["D5","Collection scan","V1"],["D6","Start Route","V1"],["D7","Live GPS","V1"],["D8","Stop arrival","V1"],["D9","Proof of delivery","V1"],["D10","Failed delivery","V1"],["D11","Offline working","V1"],["D12","Finish route","V1"],["D13","Collection damage photos","V2"],["D14","Vehicle check","V2"],["D15","Dispatch messages","V2"],["D16","Second crew member","V2"],["D21","Job history","Later"]],
+  "End-user customer": [["C1","Request a quote","V1"],["C15","Instant pricing","V1"],["C2","Quote status","V1"],["C3","Accept and pay","V1"],["C4","Tracking with QR scan","V1"],["C5","Live map","V1"],["C6","Notifications","V1"],["C7","Proof of delivery","V1"],["C8","Get help","V1"],["C9","Change details","V2"],["C10","Delivery window","V2"],["C11","Delivery instructions","V2"],["C12","Missed delivery rebooking","V2"],["C13","Rate and report","V2"],["C14","Accounts and history","V2"],["C16","In-app chat","Later"],["C17","Business portal","Later"]]
+};
+const COVERS = {
+  splash:["A1"],login:["A2","A4","D1"],otp:["A2","D1"],signup:["A3"],role:["A6"],testrole:["A6"],removed:["A7"],settings:["A5","A6"],email:["A5"],prefs:["A5","C6"],
+  home:["D2","D6","D7","D11"],vcheck:["D14"],crew:["D16"],collect:["D5","D13"],scan:["D5"],stop:["D3","D4","D8"],pod:["D9"],fail:["D10"],finish:["D12"],messages:["D15"],history:["D21"],
+  chome:["A4"],q1:["C1","C10","C15"],q5:["C1"],pay:["C3"],booking:["C2"],track:["C4"],qr:["C4"],result:["C4","C5"],proof:["C7"],inbox:["C6"],help:["C8"],chat:["C16"],change:["C9"],instr:["C11"],rebook:["C12"],rate:["C13"],bookings:["C14"],business:["C17"]
+};
+
+/* ---------- Pricing: placeholder rates only ---------- */
+const MILES = {LE:105,NN:130,SE:205,SW:205,E:205,N:200,W:205,EC:205,WC:205,NW:200,M:40,L:75,B:115,G:225,EH:215,LS:10,BD:2,S:40,NG:85,MK:145,HX:10,HD:15,WF:18,YO:35};
+const ITEM_RATE = {"Bed or mattress":30,"Sofa or armchair":40,"Wardrobe or cabinet":35,"Large appliance":45,"Other bulky goods":40};
+const WEIGHT_RATE = {"Under 25kg":0,"25–50kg":5,"51–85kg":12,"86–125kg":20};
+const POSTCODE = /^(GIR ?0AA|(?:(?:[A-PR-UWYZ][0-9][0-9A-HJKSTUW]?|[A-PR-UWYZ][A-HK-Y][0-9][0-9ABEHMNPRVWXY]?) ?[0-9][ABD-HJLNP-UW-Z]{2}))$/i;
+const normPc = v => { const c = String(v).toUpperCase().replace(/\s+/g,""); return c.length>3 ? c.slice(0,-3)+" "+c.slice(-3) : c; };
+const area = pc => (normPc(pc).match(/^[A-Z]+/)||[""])[0];
+function priceQuote(q) {
+  const reasons = [];
+  const miles = Math.max(MILES[area(q.from)] ?? 0, MILES[area(q.to)] ?? 0);
+  if (MILES[area(q.to)] === undefined || MILES[area(q.from)] === undefined) reasons.push("One postcode is outside our regular routes");
+  if (q.weight === "Over 125kg or unsure") reasons.push("The heaviest piece is over 125kg or unknown");
+  if (q.service === "Custom handling") reasons.push("Custom handling needs a person to check it");
+  if (q.service === "Not sure, advise me") reasons.push("You asked us to advise on the service");
+  if (Number(q.pieces) > 10) reasons.push("More than 10 pieces");
+  const pieces = Number(q.pieces)||1, lines = [["Base collection and delivery",35],[`Route distance, about ${miles||160} miles`,Math.round((miles||160)*.4)],[`${pieces} × ${q.item}`,pieces*(ITEM_RATE[q.item]||40)]];
+  const w = (WEIGHT_RATE[q.weight]||0)*pieces; if (w) lines.push([`Weight, ${q.weight}`,w]);
+  if (q.service === "Room of choice") lines.push(["Room of choice",25]);
+  if (q.stairs === "1 flight") lines.push(["Stairs, 1 flight",15]);
+  if (q.stairs === "2 or more flights") lines.push(["Stairs, 2 or more flights",30]);
+  if (q.window === "Morning" || q.window === "Afternoon") lines.push([`${q.window} window`,10]);
+  if (q.window === "2-hour slot") lines.push(["2-hour slot",25]);
+  return { lines, total: lines.reduce((t,l)=>t+l[1],0), review: reasons.length>0, reasons };
+}
+
+/* ---------- Tracking copy, from the live /track page ---------- */
+const STAGE = {
+  confirmed:{label:"Booking confirmed",location:"With AtlasMove dispatch",detail:"The consignment is confirmed and waiting for route assignment."},
+  assigned:{label:"Route assigned",location:"Allocated to a delivery route",detail:"The driver will start location sharing when the journey begins."},
+  collected:{label:"Collected",location:"Collected from the sender",detail:"The consignment is now in AtlasMove custody."},
+  loaded:{label:"Loaded",location:"Loaded on the assigned vehicle",detail:"The consignment is prepared for the delivery journey."},
+  in_transit:{label:"In transit",location:"On the delivery journey",detail:"The assigned vehicle is travelling through the approved route."},
+  approaching:{label:"Approaching",location:"Near the delivery destination",detail:"Please make sure the receiver is ready for handover."},
+  delivered:{label:"Delivered",location:"Delivered to the receiver",detail:"The delivery has been completed and acknowledged."},
+  delivery_failed:{label:"Delivery needs attention",location:"Delivery attempt recorded",detail:"AtlasMove dispatch is reviewing the next safe action."}
+};
+const FLOW = [["confirmed","Confirmed"],["collected","Collected"],["in_transit","In transit"],["approaching","Approaching"],["delivered","Delivered"]];
+const POS = {confirmed:0,assigned:0,collected:1,loaded:1,in_transit:2,approaching:3,delivered:4,delivery_failed:2};
+
+/* ---------- Test data ---------- */
+const NUM = {driver:"07700900100",amelia:"07700900118",both:"07700900150",off:"07700900199",biz:"07700900300",fresh:"07700900222"};
+const HERO="ATM-261111-A1B2C3D4E5F6", LON="ATM-261111-B7C41E9A2D60", MK="ATM-261111-E58A01C7F3B2", LEI="ATM-261111-C3D9F07A118B", NOT="ATM-261111-7D20AF94C6E1", NEXT="ATM-261118-9E2C7B41D0A6", DONE="ATM-261104-D4E5F6A7B8C9", MISSED="ATM-261105-F0F1F2F3F4F5", OLD="ATM-261021-5B6A7C8D9E0F";
+const CITEMS = {};
+function buildCons(){
+  const cons={};
+  const base=()=>({status:"assigned",events:[{t:"Mon 9 Nov 16:12",type:"Booking confirmed"},{t:"Tue 10 Nov 17:40",type:"Route assigned"}],date:"Wed 11 Nov",window:"Afternoon",notes:"",stairs:"None",parking:"",accessPhotos:0,pod:null,failure:null,rating:null,claim:null,rebooked:null,paid:"Card ending 4242"});
+  const mk=(ref,o,items)=>{const list=items.map(i=>({key:`${i[0]} ${i[1]}`,spec:`${i[2]} · ${i[3]} kg`}));cons[ref]=Object.assign(base(),{ref,items:list.map(l=>l.key),specs:Object.fromEntries(list.map(l=>[l.key,l.spec]))},o);};
+  mk(LON,{owner:NUM.biz,sender:"Test Furniture Co",receiver:"Priya Nair",contact:"07700 900142",address:"14 Harbour Row, London",postcode:"SE15 4TE",summary:"Wardrobe, 3 pieces",price:224,window:"Morning",notes:"Parking bay at rear. Call on arrival.",stairs:"1 flight"},[["AML-B7C4-1","Wardrobe doors","210×60×8 cm",28],["AML-B7C4-2","Wardrobe frame","215×120×25 cm",46],["AML-B7C4-3","Shelves and rails","110×55×12 cm",14]]);
+  mk(MK,{owner:NUM.biz,sender:"Test Furniture Co",receiver:"Daniel Frost",contact:"07700 900163",address:"3 Linden Court, Milton Keynes",postcode:"MK9 2AB",summary:"King bed, 3 pieces",price:198,window:"Morning",notes:"Concierge desk will open the goods lift."},[["AML-E58A-1","Bed base left","200×90×30 cm",34],["AML-E58A-2","Bed base right","200×90×30 cm",34],["AML-E58A-3","King mattress","200×150×28 cm",41]]);
+  mk(HERO,{owner:NUM.amelia,sender:"Amelia Hart",receiver:"Amelia Hart",contact:"07700 900118",address:"8 Orchard Close, Northampton",postcode:"NN1 4AB",summary:"Corner sofa, 2 pieces",price:186,notes:"Second floor, no lift. Narrow stairwell.",stairs:"2 or more flights",parking:"Visitor bay opposite block B"},[["AML-A1B2-1","Sofa left section","165×95×90 cm",48],["AML-A1B2-2","Sofa right section","210×95×90 cm",56]]);
+  mk(LEI,{owner:NUM.biz,sender:"Test Furniture Co",receiver:"Tom Okafor",contact:"07700 900177",address:"27 Mill Terrace, Leicester",postcode:"LE2 1XY",summary:"Washing machine, 1 piece",price:132,notes:"Ground floor. Side gate is unlocked."},[["AML-C3D9-1","Washing machine","85×60×60 cm",72]]);
+  mk(NOT,{owner:NUM.both,sender:"Bilal Ahmed",receiver:"Bilal Ahmed",contact:"07700 900150",address:"51 Canal View, Nottingham",postcode:"NG7 2QT",summary:"Dining table and 4 chairs",price:154,notes:"Please ring first. Driveway is free."},[["AML-7D20-1","Table top","180×90×6 cm",31],["AML-7D20-2","Table legs and frame","90×70×15 cm",18],["AML-7D20-3","Chairs, set of 4","90×50×50 cm",22]]);
+  mk(NEXT,{owner:NUM.amelia,sender:"Amelia Hart",receiver:"Amelia Hart",contact:"07700 900118",address:"8 Orchard Close, Northampton",postcode:"NN1 4AB",summary:"Oak bookcase, 1 piece",price:96,status:"confirmed",date:"Wed 18 Nov",window:"Morning",events:[{t:"Sun 8 Nov 12:30",type:"Booking confirmed"}]},[["AML-9E2C-1","Oak bookcase","200×90×35 cm",44]]);
+  mk(DONE,{owner:NUM.amelia,sender:"Amelia Hart",receiver:"Amelia Hart",contact:"07700 900118",address:"8 Orchard Close, Northampton",postcode:"NN1 4AB",summary:"Double bed, 2 pieces",price:142,status:"delivered",date:"Wed 4 Nov",window:"Morning",events:[{t:"Mon 2 Nov 10:21",type:"Booking confirmed"},{t:"Wed 4 Nov 07:52",type:"Collected"},{t:"Wed 4 Nov 08:15",type:"In transit"},{t:"Wed 4 Nov 11:06",type:"Approaching"},{t:"Wed 4 Nov 11:34",type:"Delivered"}],pod:{name:"Amelia Hart",at:"Wed 4 Nov 11:34",sig:null,photos:2,gps:"52.2405, -0.9027"}},[["AML-D4E5-1","Bed base","190×135×30 cm",38],["AML-D4E5-2","Mattress","190×135×25 cm",29]]);
+  mk(MISSED,{owner:NUM.amelia,sender:"Amelia Hart",receiver:"Amelia Hart",contact:"07700 900118",address:"8 Orchard Close, Northampton",postcode:"NN1 4AB",summary:"Chest of drawers, 1 piece",price:118,status:"delivery_failed",date:"Thu 5 Nov",events:[{t:"Tue 3 Nov 09:02",type:"Booking confirmed"},{t:"Thu 5 Nov 08:03",type:"Collected"},{t:"Thu 5 Nov 14:48",type:"Delivery attempted: Receiver not home"}],failure:{reason:"Receiver not home",at:"Thu 5 Nov 14:48"}},[["AML-F0F1-1","Chest of drawers","110×80×45 cm",37]]);
+  mk(OLD,{owner:NUM.biz,sender:"Test Furniture Co",receiver:"Hannah Reid",contact:"07700 900135",address:"6 Station Road, Sheffield",postcode:"S1 2GU",summary:"Armchair, 1 piece",price:88,status:"delivered",date:"Wed 21 Oct",window:"Any time",events:[{t:"Wed 21 Oct 13:17",type:"Delivered"}],pod:{name:"Hannah Reid",at:"Wed 21 Oct 13:17",sig:null,photos:1,gps:"53.3811, -1.4701"}},[["AML-5B6A-1","Armchair","95×85×85 cm",26]]);
+  return cons;
+}
+function newPhone(id,label){ return {id,label,route:"splash",stack:[],sheet:null,toast:null,busy:null,wa:null,number:null,mode:null,pending:false,trackRef:null,bookingId:null,payMethod:"apple",more:false,rateStars:0,rateDamage:false,rateDamagePhotos:0,otp:{code:null,sentAt:0,expired:false,changing:false},qrError:null,err:{},
+  form:{phone:"",code:"",name:"",from:"",fromAddr:"",to:"",toAddr:"",item:"Sofa or armchair",pieces:"1",weight:"25–50kg",service:"Doorstep or ground floor",stairs:"None",date:"",window:"Any time",notes:"",receiver:"",terms:false,cardNo:"",cardExp:"",cardCvc:"",track:"",changeNotes:"",changeDate:"",parking:"",stairsEdit:"",rateText:"",chat:"",msg:"",failNote:"",podName:"",email:"",newName:"",newPhone:""}}; }
+function acct(name,o={}){ return Object.assign({name,driver:null,customer:false,lastMode:null,email:null,emailVerified:false,prefs:{whatsapp:true,push:true,email:false},inbox:[],unread:0,bookings:[],chat:[{me:false,t:"09:01",x:"Hello, this is AtlasMove support. How can we help with your delivery?"}],mobile:null},o); }
+function freshState(){
+  const accounts={
+    [NUM.driver]:acct("Daniel Whitaker",{driver:"on"}),
+    [NUM.amelia]:acct("Amelia Hart",{customer:true}),
+    [NUM.both]:acct("Bilal Ahmed",{driver:"on",customer:true}),
+    [NUM.off]:acct("Marek Nowak",{driver:"off"}),
+    [NUM.biz]:acct("Test Furniture Co",{customer:true,business:true})
+  };
+  accounts[NUM.amelia].bookings=[
+    {id:"AMQ-2038",status:"requested",route:"BD8 7SG to IV2 3PY",summary:"1 × Other bulky goods",date:"Sat 21 Nov",window:"Any time",price:null,ref:null,log:{requested:"Mon 9 Nov 18:02"},form:{to:"IV2 3PY",toAddr:"4 Firth View, Inverness",item:"Other bulky goods",pieces:"1",notes:"",stairs:"None",name:"Amelia Hart",receiver:"07700 900118"}},
+    {id:"AMQ-2039",status:"offered",route:"BD8 7SG to NN1 4AB",summary:"1 × Wardrobe or cabinet",date:"Wed 25 Nov",window:"Afternoon",price:164,ref:null,log:{requested:"Tue 10 Nov 09:14",offered:"Tue 10 Nov 09:26"},form:{to:"NN1 4AB",toAddr:"8 Orchard Close, Northampton",item:"Wardrobe or cabinet",pieces:"1",notes:"",stairs:"2 or more flights",name:"Amelia Hart",receiver:"07700 900118"}}
+  ];
+  return {
+    clock:7*60+40,leg:0,legProgress:0,cons:buildCons(),accounts,seq:2041,
+    stops:[{ref:LON,state:"pending",arrivedAt:null,min:205},{ref:MK,state:"pending",arrivedAt:null,min:65},{ref:HERO,state:"pending",arrivedAt:null,min:30},{ref:LEI,state:"pending",arrivedAt:null,min:50},{ref:NOT,state:"pending",arrivedAt:null,min:40}],
+    drv:{vcheck:{},vdone:false,defect:false,crew:null,scanned:{},scanMsg:null,dmg:{},collected:false,started:false,finished:false,online:true,queue:[],stopIdx:0,pod:{scan:{},sig:null,photos:0},fail:{reason:null,photos:0},msgs:[{me:false,t:"07:05",x:"Morning. Bradford to London today, five drops. Stop order is approved."}],unread:1,finishedAt:null,localPod:{}},
+    phones:{a:newPhone("a","Phone")},
+    visited:new Set(),seen:new Set()
+  };
+}
+let S=freshState();
+let P=S.phones.a;      /* the phone an action or screen belongs to */
+let FAST=false;        /* the automated test turns off waits */
+let VALIDATE=false;    /* test-run switch: false skips input validation so every screen can be reached */
+const TEST_DEFAULTS={from:"BD8 7SG",to:"NN1 4AB",fromAddr:"215 Lumb Lane, Bradford",toAddr:"8 Orchard Close, Northampton",receiver:"07700 900118",podName:"Test Receiver"};
+const TEST_TARGET="TEST";
+const TOOLS={a:[],b:[]};
+const stamp=()=>`Wed 11 Nov ${pad(Math.floor(S.clock/60))}:${pad(Math.floor(S.clock%60))}`;
+const hhmm=(m=S.clock)=>`${pad(Math.floor(m/60)%24)}:${pad(Math.floor(m%60))}`;
+const me=(p=P)=>p.number?S.accounts[p.number]:null;
+const fmtNum=n=>n?`${n.slice(0,5)} ${n.slice(5)}`:"";
+const owned=c=>P.mode==="customer"&&c.owner===P.number;
+
+/* ---------- Shared behaviour ---------- */
+function toast(p,title,body,o={}){p.toast=Object.assign({title,body,until:Date.now()+(o.ms||3800)},o);}
+function channelText(a){const c=[];if(a.prefs.whatsapp)c.push("WhatsApp");if(a.prefs.push)c.push("Push");if(a.prefs.email&&a.emailVerified)c.push("Email");return c.join(", ")||"In app only";}
+function notify(ref,title,body){
+  const c=S.cons[ref],a=S.accounts[c.owner]; if(!a) return;
+  a.inbox.unshift({ref,title,body,at:stamp(),channel:channelText(a)}); a.unread++;
+  Object.values(S.phones).forEach(p=>{ if(p.number!==c.owner) return; if(p.mode==="customer") toast(p,title,body); else if(p.mode==="driver") toast(p,"Customer update",`${title}. Switch to customer to see it.`); });
+}
+function addEvent(ref,type){S.cons[ref].events.push({t:stamp(),type});}
+function commit(fn){ if(S.drv.online) fn(); else S.drv.queue.push(fn); }
+const nextStopIdx=()=>S.stops.findIndex(s=>s.state==="pending"||s.state==="arrived");
+const allLabels=()=>S.stops.flatMap(s=>S.cons[s.ref].items);
+const scanCount=()=>allLabels().filter(l=>S.drv.scanned[l]).length;
+function etaFor(ref){
+  const k=S.stops.findIndex(s=>s.ref===ref); if(k<0||!S.drv.started) return null;
+  if(["delivered","failed"].includes(S.stops[k].state)) return null;
+  let rem=0; for(let i=S.leg;i<=k;i++) rem+=S.stops[i].min*(i===S.leg?(1-S.legProgress):1)+(i>S.leg?12:0);
+  return {at:S.clock+rem,rem:Math.max(1,Math.round(rem))};
+}
+function advanceLeg(i){ if(i===S.leg){S.leg=Math.min(i+1,S.stops.length-1);S.legProgress=(i+1>=S.stops.length)?1:0;} }
+function go(r){ if(P.route!==r){P.stack.push(P.route);P.route=r;} P.err={};P.sheet=null; }
+function back(){ P.route=P.stack.pop()||homeOf(P);P.err={};P.sheet=null; }
+function tab(r){ P.stack=[];P.route=r;P.err={};P.sheet=null; }
+const homeOf=p=>p.mode==="driver"?"home":p.mode?"chome":"login";
+function withBusy(msg,ms,fn){ if(FAST){fn();return;} const p=P; p.busy=msg; render(); setTimeout(()=>{P=p;p.busy=null;fn();render();},ms); }
+function enterMode(mode){
+  P.mode=mode;P.stack=[];P.err={};P.sheet=null;
+  const a=me(); if(a&&mode!=="guest") a.lastMode=mode;
+  P.route=mode==="driver"?"home":"chome";
+  if(P.pending&&mode==="customer"){P.pending=false;P.form.name=a.name;prepQ5();P.stack=["chome"];P.route="q5";}
+}
+function routeAfterLogin(){
+  const a=me(); P.form.code="";
+  if(!a){P.form.name="";P.route="signup";P.stack=[];return;}
+  const dr=a.driver==="on",cu=a.customer;
+  if(dr&&cu){ if(a.lastMode) enterMode(a.lastMode); else {P.route="role";P.stack=[];} return; }
+  if(dr){enterMode("driver");return;}
+  if(cu){enterMode("customer");if(a.driver==="off")toast(P,"Driver access is off","You are signed in as a customer.");return;}
+  if(a.driver==="off"){P.route="removed";P.stack=[];return;}
+  P.route="signup";P.stack=[];
+}
+function syncRoles(){ /* the portal can change a role while someone is using the app */
+  Object.values(S.phones).forEach(p=>{
+    if(p.mode!=="driver") return; const a=S.accounts[p.number]; if(a&&a.driver==="on") return;
+    const prev=P; P=p;
+    if(a&&a.customer){enterMode("customer");toast(p,"Driver access is off","Dispatch turned it off, so you are back in customer mode.");}
+    else{p.mode=null;p.route="removed";p.stack=[];p.sheet=null;}
+    P=prev;
+  });
+}
+function signOut(){P.number=null;P.mode=null;P.stack=[];P.route="login";P.sheet=null;P.err={};P.form.phone="";P.form.code="";P.pending=false;P.trackRef=null;}
+
+/* ---------- Form helpers ---------- */
+function field(key,label,o={}){
+  const id=`${P.id}-${key}`,v=P.form[key]??"",err=P.err[key],bind=`data-bind="${P.id}.form.${key}"`; let ctl;
+  if(o.options) ctl=`<select id="${id}" ${bind}><option value="">${esc(o.ph||"Select")}</option>${o.options.map(x=>`<option${x===v?" selected":""}>${esc(x)}</option>`).join("")}</select>`;
+  else if(o.area) ctl=`<textarea id="${id}" ${bind} placeholder="${esc(o.ph||"")}" maxlength="${o.max||1000}">${esc(v)}</textarea>`;
+  else ctl=`<input id="${id}" ${bind} type="${o.type||"text"}" value="${esc(v)}" placeholder="${esc(o.ph||"")}" autocomplete="off"${o.mode?` inputmode="${o.mode}"`:""}>`;
+  return `<label class="field${err?" err":""}${o.cls?" "+o.cls:""}" for="${id}"><span>${esc(label)}</span>${ctl}${err?`<em>${esc(err)}</em>`:""}</label>`;
+}
+/* Registers a control in the test panel for this phone. Renders nothing inside the phone. */
+function phoneField(key,label){const id=`${P.id}-${key}`,err=P.err[key];return `<label class="field${err?" err":""}" for="${id}"><span>${esc(label)}</span><span class="phonefield"><b>+44</b><input id="${id}" data-bind="${P.id}.form.${key}" type="tel" inputmode="tel" value="${esc(P.form[key]??"")}" placeholder="07700 900000" autocomplete="off"></span>${err?`<em role="alert">${esc(err)}</em>`:""}</label>`;}
+const tool=(title,btns)=>{TOOLS[P.id].push({title,btns});return "";};
+const addPhoto=(act,v,label)=>`<button class="photo add" type="button" data-a="${act}"${v!==undefined?` data-v="${esc(v)}"`:""} aria-label="${esc(label)}">${ic("cam")}</button>`;
+const shots=n=>Array.from({length:n},(_,i)=>`<div class="photo">${shot(i)}</div>`).join("");
+const toggle=(on,act,v,label,sub)=>`<button class="setrow" type="button" data-a="${act}" data-v="${v}" role="switch" aria-checked="${on}"><span class="grow"><strong>${esc(label)}</strong>${sub?`<small>${esc(sub)}</small>`:""}</span><span class="switch ${on?"on":""}"></span></button>`;
+
+/* ---------- Map ---------- */
+const PATH=[[70,40],[130,75],[210,100],[280,165],[330,205],[405,235],[455,300],[530,355]];
+const LINE=PATH.map(p=>p.join(",")).join(" ");
+function lerp(f){const n=PATH.length-1,t=Math.min(.999,Math.max(0,f))*n,i=Math.floor(t),r=t-i;return{x:PATH[i][0]+(PATH[i+1][0]-PATH[i][0])*r,y:PATH[i][1]+(PATH[i+1][1]-PATH[i][1])*r};}
+const BASEMAP=(()=>{let x=7;const r=()=>(x=(x*16807)%2147483647)/2147483647;let s=`<rect width="600" height="400" fill="#eef1ea"/>`;
+  for(let i=0;i<9;i++) s+=`<rect x="${r()*560}" y="${r()*360}" width="${40+r()*70}" height="${30+r()*50}" rx="10" fill="#d7e8d2" transform="rotate(${r()*30-15} 300 200)"/>`;
+  s+=`<path d="M-10 300C90 270 150 330 240 300S380 230 460 250 560 210 620 225" fill="none" stroke="#c6dfe8" stroke-width="16"/>`;
+  for(let i=0;i<16;i++){const y=i*27+r()*8;s+=`<path d="M0 ${y}C150 ${y+r()*40-20} 400 ${y+r()*40-20} 600 ${y+r()*30-15}" fill="none" stroke="#fff" stroke-width="${1.5+r()*2}"/>`;}
+  for(let i=0;i<20;i++){const v=i*31+r()*10;s+=`<path d="M${v} 0C${v+r()*50-25} 130 ${v+r()*50-25} 270 ${v+r()*40-20} 400" fill="none" stroke="#fff" stroke-width="${1.5+r()*2}"/>`;}
+  s+=`<path d="M-10 90C120 110 260 90 360 130S520 150 620 110" fill="none" stroke="#fbfbf6" stroke-width="7"/><path d="M60 -10C120 110 180 220 260 280S420 370 460 410" fill="none" stroke="#f1d58b" stroke-width="7"/><rect x="150" y="150" width="30" height="18" rx="4" fill="#2c5fa8"/><text x="165" y="163" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="sans-serif">M1</text>`;
+  return s;})();
+const vehIcon=`<circle r="14" fill="#102c28" stroke="#fff" stroke-width="3"/><path d="M-6 5 6 -6M6 -6H-2M6 -6V2" stroke="#b9e85e" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+function custFrac(k){let tot=0,done=0;for(let i=0;i<=k;i++){tot+=S.stops[i].min;if(i<S.leg)done+=S.stops[i].min;if(i===S.leg)done+=S.stops[i].min*S.legProgress;}return tot?done/tot:0;}
+const drvFrac=()=>(S.leg+S.legProgress)/S.stops.length;
+function custMap(c){
+  const k=S.stops.findIndex(s=>s.ref===c.ref),p=lerp(custFrac(k)),e=etaFor(c.ref),end=PATH[PATH.length-1];
+  return `<div class="map hero"><svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Map showing only your delivery vehicle and destination">${BASEMAP}<polyline points="${LINE}" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${LINE}" fill="none" stroke="#0b5f4f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(${end[0]} ${end[1]})"><circle r="9" fill="#b9e85e" stroke="#fff" stroke-width="3"/><rect x="-48" y="-46" width="96" height="28" rx="14" fill="#b9e85e" stroke="#fff" stroke-width="3"/><text y="-27" text-anchor="middle" font-size="15" font-weight="800" fill="#102c28" font-family="sans-serif">${esc(c.postcode)}</text></g>
+    <g data-veh="${k}" transform="translate(${p.x} ${p.y})">${vehIcon}</g></svg>
+    <footer><strong data-live="gpsc">${S.drv.online?`Vehicle updated ${hhmm()}`:"No recent GPS, last known position"}</strong><span data-live="rem">${e?`${e.rem} min remaining`:""}</span></footer></div>`;
+}
+function drvMap(){
+  const p=lerp(drvFrac()),n=S.stops.length;
+  const pins=S.stops.map((s,i)=>{const q=lerp((i+1)/n),col=s.state==="delivered"?"#137d5a":s.state==="failed"?"#b5442f":"#b9e85e",tx=s.state==="delivered"||s.state==="failed"?"#fff":"#102c28";return `<g transform="translate(${q.x} ${q.y})"><circle r="13" fill="${col}" stroke="#fff" stroke-width="3"/><text y="5" text-anchor="middle" font-size="13" font-weight="800" fill="${tx}" font-family="sans-serif">${i+1}</text></g>`}).join("");
+  return `<div class="map"><svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Map of today's route and stops">${BASEMAP}<polyline points="${LINE}" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${LINE}" fill="none" stroke="#0b5f4f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>${pins}${S.drv.started&&!S.drv.finished?`<g data-veh="all" transform="translate(${p.x} ${p.y})">${vehIcon}</g>`:""}</svg></div>`;
+}
+/* ---------- Screens: sign-in ---------- */
+const Q=(n)=>`<div class="steps">${[1,2,3,4,5].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</div>`;
+const SC={
+  splash(){return {splash:true,body:""};},
+  login(){return {navy:true,body:`
+    <div style="padding:20px 6px 6px;display:grid;gap:16px;color:#fff">${logo(true,false)}<h2 style="font-size:30px">Delivery you can plan, track and prove.</h2><p style="color:#cfe0da">Enter your mobile number. We'll send a code on WhatsApp.</p></div>
+    ${P.pending?`<div class="note">${ic("check")}<span>Your price is saved. Sign in or sign up to book it.</span></div>`:""}
+    <div class="card">${phoneField("phone","Mobile number")}
+      <button class="pill wa" type="button" data-a="sendCode">${ic("msg")} Send code on WhatsApp</button>
+      <small class="muted">New here? Enter your number and we'll set up your customer account.</small></div>
+    <button class="pill ghostd" type="button" data-a="guest">Continue as guest</button>
+    <p style="color:#bcd0c9;font-size:12.5px;text-align:center">As a guest you can track a delivery and get an instant price.</p>`};},
+  otp(){const o=P.otp,left=Math.max(0,30-Math.floor((Date.now()-o.sentAt)/1000));tool("WhatsApp code",[["Show the code again","waAgain"],["Make the code expire","otpExpire"],["Skip the resend wait","otpSkip"]]);return {title:"Enter your code",back:true,body:`
+    <div class="row"><span class="dot wa">${ic("msg")}</span><p class="grow muted">We sent a 6-digit code on WhatsApp to <strong style="color:var(--ink)">${P.otp.target===TEST_TARGET?"your mobile":esc(fmtNum(P.otp.target))}</strong>.</p></div>
+    <div class="card">${field("code","Verification code",{mode:"numeric",ph:"------",cls:"otp"})}
+      <button class="pill lime" type="button" data-a="verify">Verify and continue</button>
+      <button class="pill ghost" type="button" data-a="resend" data-resend ${left>0?"disabled":""}>${left>0?`Resend in ${left}s`:"Resend code"}</button></div>
+    <button class="chip" type="button" style="align-self:center" data-a="back">Change number</button>
+    <div class="note grey">${ic("shield")}<span>AtlasMove will never ask you to share this code.</span></div>`};},
+  signup(){return {title:"Welcome to AtlasMove",body:`
+    <div class="card navy"><p class="kicker">Mobile verified</p><h2>What should we call you?</h2><p>That's all we need. You can add an email later in Settings.</p></div>
+    <div class="card">${field("name","Your name",{ph:"First and last name"})}</div>
+    <div class="note grey">${ic("truck")}<span>This creates a customer account. Delivery driver accounts are set up by AtlasMove dispatch.</span></div>`,foot:`<button class="pill lime" type="button" data-a="signupDone">Create my account</button>`};},
+  testrole(){tool("About this screen",[]);TOOLS[P.id].pop();TOOLS[P.id].push({title:"Note",text:"This choice appears only when validation is off and no number is typed. In the real app the mobile number decides."});return {title:"How are you using AtlasMove?",body:`
+    <button class="item" type="button" data-a="testPick" data-v="driver"><span class="dot now">${ic("truck")}</span><span class="grow"><strong>Continue as driver</strong><small>Today's route, scans and proof of delivery</small></span>${ic("next")}</button>
+    <button class="item" type="button" data-a="testPick" data-v="customer"><span class="dot">${ic("box")}</span><span class="grow"><strong>Continue as customer</strong><small>Your bookings, prices and tracking</small></span>${ic("next")}</button>`};},
+  role(){const a=me();return {title:"How are you using AtlasMove?",body:`
+    <p class="muted">Hello ${esc(a.name)}. This number is set up as a driver and a customer. You can switch any time in Settings.</p>
+    <button class="item" type="button" data-a="pickRole" data-v="driver"><span class="dot now">${ic("truck")}</span><span class="grow"><strong>Continue as driver</strong><small>Today's route, scans and proof of delivery</small></span>${ic("next")}</button>
+    <button class="item" type="button" data-a="pickRole" data-v="customer"><span class="dot">${ic("box")}</span><span class="grow"><strong>Continue as customer</strong><small>Your bookings, prices and tracking</small></span>${ic("next")}</button>`};},
+  removed(){return {title:"Driver access is off",body:`
+    <div class="note red">${ic("lock")}<span>AtlasMove dispatch has turned off driver access for this number. Call dispatch if you think this is wrong.</span></div>
+    <div class="card"><h3>Need a delivery yourself?</h3><p class="muted">You can still use AtlasMove as a customer.</p><button class="pill lime" type="button" data-a="becomeCustomer">Continue as a customer</button></div>`,foot:`<button class="pill ghost" type="button" data-a="signOut">${ic("logout")} Sign out</button>`};},
+
+  /* ---------- Settings (both roles) ---------- */
+  settings(){const a=me(),d=P.mode==="driver",both=a.driver==="on"&&a.customer,live=S.drv.started&&!S.drv.finished;return {title:"Settings",tabs:"settings",body:`
+    <div class="card"><div class="row"><span class="dot now">${esc(a.name.split(" ").map(w=>w[0]).slice(0,2).join(""))}</span><div class="grow"><strong>${esc(a.name)}</strong><br><small class="muted">${esc(fmtNum(a.mobile||P.number))} · verified on WhatsApp</small></div><span class="tag ${d?"":"grey"}">${d?"Driver":"Customer"}</span></div></div>
+    ${both?`<div class="setgroup"><button class="setrow" type="button" data-a="switchMode"><span class="dot now">${ic("swap")}</span><span class="grow"><strong>Switch to ${d?"customer":"driver"}</strong><small>${d?"See your own bookings and tracking":"Open today's route"}${d&&live?". GPS keeps running.":""}</small></span>${ic("next")}</button></div>`:""}
+    ${d&&!a.customer?`<div class="setgroup"><button class="setrow" type="button" data-a="becomeCustomer"><span class="dot">${ic("box")}</span><span class="grow"><strong>Also use as a customer</strong><small>Book and track your own deliveries</small></span>${ic("next")}</button></div>`:""}
+    <div class="setgroup">
+      <button class="setrow" type="button" data-a="editName"><span class="grow"><strong>Name</strong><small>${esc(a.name)}</small></span>${ic("next")}</button>
+      <button class="setrow" type="button" data-a="goChange"><span class="grow"><strong>Mobile number</strong><small>${esc(fmtNum(a.mobile||P.number))}</small></span>${ic("next")}</button>
+      <button class="setrow" type="button" data-a="goEmail"><span class="grow"><strong>Email</strong><small>${a.email?`${esc(a.email)}${a.emailVerified?"":" · waiting for you to verify"}`:"Not added. Optional, for receipts and updates"}</small></span>${a.emailVerified?'<span class="tag">Verified</span>':ic("next")}</button>
+      <button class="setrow" type="button" data-a="go" data-v="prefs"><span class="grow"><strong>Notifications</strong><small>${esc(channelText(a))}</small></span>${ic("next")}</button>
+    </div>
+    ${d?`<div class="setgroup"><div class="setrow"><span class="grow"><strong>Location access</strong><small>Used only during an active route</small></span><span class="tag ${live?"":"grey"}">${live?"In use":"Off"}</span></div><div class="setrow"><span class="grow"><strong>Vehicle</strong><small>AtlasMove Van 1 · TE57 AMV</small></span></div></div>`:""}
+    ${a.business&&!d?`<div class="setgroup"><button class="setrow" type="button" data-a="go" data-v="business"><span class="grow"><strong>Business portal</strong><small>All Test Furniture Co consignments</small></span>${ic("next")}</button></div>`:""}
+    <div class="setgroup">
+      <button class="setrow" type="button" data-a="go" data-v="help"><span class="grow"><strong>Help and support</strong></span>${ic("next")}</button>
+      <button class="setrow" type="button" data-a="signOutAsk"><span class="grow"><strong>Sign out</strong></span>${ic("logout")}</button>
+      ${a.customer?`<button class="setrow red" type="button" data-a="deleteAsk"><span class="grow"><strong>Delete customer account</strong></span></button>`:""}
+    </div>`};},
+  email(){const a=me();if(a.email&&!a.emailVerified)tool("Email",[["Open the verification link","emailVerify"]]);return {title:"Email",back:true,body:`
+    <p class="muted">Email is optional. Add one for receipts and delivery updates.</p>
+    ${a.email&&!a.emailVerified?`<div class="note amber">${ic("mail")}<span>We sent a link to ${esc(a.email)}. Open it to finish.</span></div>`:""}
+    ${a.emailVerified?`<div class="note">${ic("check")}<span>${esc(a.email)} is verified.</span></div>`:""}
+    <div class="card">${field("email","Email address",{type:"email",mode:"email",ph:"you@example.com"})}</div>
+    ${a.email?`<button class="pill danger" type="button" data-a="emailRemove">Remove email</button>`:""}`,foot:`<button class="pill lime" type="button" data-a="emailSave">Save and verify</button>`};},
+  changeNumber(){return {title:"Change mobile number",back:true,body:`<p class="muted">We'll send a WhatsApp code to your new number. Your bookings stay on your account.</p><div class="card">${phoneField("newPhone","New mobile number")}</div>`,foot:`<button class="pill wa" type="button" data-a="changeSend">${ic("msg")} Send code on WhatsApp</button>`};},
+  prefs(){const a=me(),p=a.prefs;return {title:"Notifications",back:true,body:`
+    <p class="muted">Choose how we tell you about your deliveries.</p>
+    <div class="setgroup">${toggle(p.whatsapp,"prefToggle","whatsapp","WhatsApp","Confirmed, on the way, delivered")}${toggle(p.push,"prefToggle","push","Push notifications","Alerts on this phone")}${a.emailVerified?toggle(p.email,"prefToggle","email","Email",a.email):`<button class="setrow" type="button" data-a="goEmail"><span class="grow"><strong>Email</strong><small>Add and verify an email to turn this on</small></span>${ic("next")}</button>`}</div>`};},
+
+  /* ---------- Driver ---------- */
+  home(){const d=S.drv,nx=nextStopIdx(),all=S.stops,a=me(),doneN=all.filter(s=>s.state==="delivered"||s.state==="failed").length;let cta;
+    if(d.finished)cta=`<div class="note">${ic("check")}<span>Route finished at ${esc(d.finishedAt)}. GPS is off.</span></div>`;
+    else if(!d.collected)cta=`<button class="pill lime" type="button" data-a="go" data-v="scan">${ic("scan")} Scan ${allLabels().length-scanCount()} labels</button>`;
+    else if(!d.started)cta=`<button class="pill lime" type="button" data-a="startAsk">${ic("play")} Start Route</button>`;
+    else if(nx>=0)cta=`<button class="pill lime" type="button" data-a="openStop" data-v="${nx}">${ic("nav")} Open stop ${nx+1}: ${esc(S.cons[all[nx].ref].postcode)}</button>`;
+    else cta=`<button class="pill lime" type="button" data-a="go" data-v="finish">${ic("flag")} Finish route</button>`;
+    return {title:`Hello ${a.name.split(" ")[0]}`,mark:true,tabs:"home",body:`
+    ${drvMap()}
+    <div class="card navy"><div class="row"><div class="grow"><p class="kicker">Wed 11 Nov · London route</p><h2>Bradford to London</h2></div><span class="tag">${d.finished?"Finished":d.started?"Live":"Not started"}</span></div>
+      <div class="facts"><div><small>Vehicle</small><strong>Van 1 · TE57 AMV</strong></div><div><small>Progress</small><strong>${doneN} of ${all.length} drops</strong></div><div><small>Distance</small><strong>About 410 miles</strong></div><div><small>Crew</small><strong>${d.crew?esc(d.crew):"Add second person"}</strong></div></div></div>
+    ${d.started&&!d.finished?`<div class="card"><div class="row"><span class="pdot ${d.online?"":"off"}"></span><div class="grow"><strong>${d.online?"GPS live":"No signal, GPS paused"}</strong><br><small class="muted" data-live="gps">${d.online?`Last sent ${hhmm()}`:"Customers see your last known time"}</small></div>${d.queue.length?`<span class="tag amber">${d.queue.length} waiting to upload</span>`:`<span class="tag">All uploaded</span>`}</div></div>`:""}
+    <div class="list">
+      <button class="item" type="button" data-a="go" data-v="vcheck"><span class="dot ${d.vdone?"done":""}">${d.vdone?ic("check"):ic("truck")}</span><span class="grow"><strong>Vehicle check</strong><small>${d.vdone?(d.defect?"Done, defect reported":"Done, no defects"):"Before you leave"}</small></span>${ic("next")}</button>
+      <button class="item" type="button" data-a="go" data-v="crew"><span class="dot ${d.crew?"done":""}">${ic("users")}</span><span class="grow"><strong>Crew</strong><small>${d.crew?`With ${esc(d.crew)}`:"Add your second person"}</small></span>${ic("next")}</button>
+      <button class="item" type="button" data-a="go" data-v="collect"><span class="dot ${d.collected?"done":"now"}">${d.collected?ic("check"):ic("scan")}</span><span class="grow"><strong>Collection at Bradford hub</strong><small>215 Lumb Lane · BD8 7SG · ${scanCount()} of ${allLabels().length} labels</small></span>${ic("next")}</button>
+      ${all.map((s,i)=>{const c=S.cons[s.ref],cls=s.state==="delivered"?"done":s.state==="failed"?"fail":i===nx&&d.started?"now":"";return `<button class="item" type="button" data-a="openStop" data-v="${i}"><span class="dot ${cls}">${s.state==="delivered"?ic("check"):s.state==="failed"?ic("x"):i+1}</span><span class="grow"><strong>${esc(c.postcode)} · ${esc(c.receiver)}</strong><small>${esc(c.summary)} · ${esc(c.window)}</small></span>${s.state==="delivered"?'<span class="tag">Delivered</span>':s.state==="failed"?'<span class="tag red">Failed</span>':s.state==="arrived"?'<span class="tag amber">Arrived</span>':ic("next")}</button>`}).join("")}
+    </div>
+    ${d.started&&!d.finished&&nx>=0?`<button class="pill ghost" type="button" data-a="go" data-v="finish">${ic("flag")} Finish route</button>`:""}
+    <div class="card"><p class="kicker">Next route</p><div class="row"><span class="grow"><strong>Bradford to Glasgow / Edinburgh</strong><br><small class="muted">Sat 14 Nov · 6 drops · TE57 AMV</small></span><span class="tag grey">Published</span></div></div>`,foot:cta};},
+  vcheck(){const d=S.drv,items=["Tyres and wheels","Lights and indicators","Brakes and steering","Mirrors and windscreen","Tail lift and load straps","Fuel and fluid levels"],all=items.every(x=>d.vcheck[x]);return {title:"Vehicle check",back:true,body:`<p class="muted">AtlasMove Van 1 · TE57 AMV. Check each item before you leave.</p>
+    <button class="pill lime" type="button" data-a="vAllOk">${ic("check")} Everything is OK</button><div class="list">${items.map(x=>`<button class="check ${d.vcheck[x]?"on":""}" type="button" data-a="vItem" data-v="${esc(x)}"><span class="box">${d.vcheck[x]?ic("check"):""}</span>${esc(x)}</button>`).join("")}</div>
+    <button class="check ${d.defect?"on":""}" type="button" data-a="vDefect"><span class="box">${d.defect?ic("check"):""}</span>Report a defect to dispatch</button>`,foot:all||d.defect?`<button class="pill dark" type="button" data-a="vDone">Save vehicle check</button>`:""};},
+  crew(){const d=S.drv,a=me(),list=["Bilal Ahmed","Sam Turner","Marek Nowak","Daniel Whitaker"].filter(n=>n!==a.name);return {title:"Second crew member",back:true,body:`<p class="muted">Two-person jobs need both people on the record.</p><div class="list">${list.map(n=>`<button class="check ${d.crew===n?"on":""}" type="button" data-a="crewPick" data-v="${n}"><span class="box">${d.crew===n?ic("check"):""}</span>${n}</button>`).join("")}</div>`,};},
+  collect(){const d=S.drv,cnt=scanCount(),total=allLabels().length,done=cnt===total;if(!done)tool("Collection",[["Scan all remaining labels","scanAll"]]);return {title:"Collection scan",back:true,body:`
+    <div class="card"><div class="row"><div class="grow"><strong>${cnt} of ${total} labels scanned</strong><br><small class="muted">Bradford hub · every piece needs a scan</small></div>${done?'<span class="tag">Complete</span>':'<span class="tag amber">In progress</span>'}</div><div class="steps">${allLabels().map(l=>`<i class="${d.scanned[l]?"on":""}"></i>`).join("")}</div></div>
+    ${S.stops.map(s=>{const c=S.cons[s.ref];return `<div class="card"><div class="grow"><h3>${esc(c.summary)}</h3><small class="muted">For ${esc(c.receiver)} · ${esc(c.postcode)}</small></div>
+      <div class="list">${c.items.map(l=>`<div class="row"><span class="dot ${d.scanned[l]?"done":""}" style="width:24px;height:24px;font-size:11px">${d.scanned[l]?ic("check"):""}</span><span class="grow" style="font-size:13px">${esc(l)}<br><small class="muted">${esc(c.specs[l])}</small></span></div>`).join("")}</div>
+      <div class="row"><small class="muted grow">Condition photos</small><div class="photos">${Array.from({length:d.dmg[c.ref]||0},(_,i)=>`<div class="photo" style="width:42px;height:42px">${shot(i)}</div>`).join("")}<button class="photo add" style="width:42px;height:42px" type="button" data-a="dmgPhoto" data-v="${c.ref}" aria-label="Add condition photo for ${esc(c.summary)}">${ic("cam")}</button></div></div></div>`}).join("")}`,
+    foot:done?(d.collected?`<button class="pill dark" type="button" data-a="goHome">Back to route</button>`:`<button class="pill lime" type="button" data-a="collected">Back to route</button>`):`<button class="pill lime" type="button" data-a="go" data-v="scan">${ic("scan")} Scan next label</button>`};},
+  scan(){const d=S.drv,next=allLabels().find(l=>!d.scanned[l]);tool("Label scan",[["Point at a wrong label","scanBad"]]);return {title:"Scan label",back:true,body:`
+    <div class="viewfinder"><div class="frame"></div><span>Line up the QR label inside the frame</span></div>
+    ${d.scanMsg?`<div class="note ${d.scanMsg.bad?"red":""}">${ic(d.scanMsg.bad?"alert":"check")}<span>${esc(d.scanMsg.text)}</span></div>`:""}
+    ${next?`<div class="card"><small class="muted">Next label</small><strong>${esc(next)}</strong></div>`:`<div class="note">${ic("check")}<span>All labels scanned.</span></div>`}`,
+    foot:`${next?`<button class="pill lime" type="button" data-a="scanOk">${ic("scan")} Scan label</button>`:""}<button class="pill ghost" type="button" data-a="scanMissing">Report a missing piece</button>`};},
+  stop(){const d=S.drv,s=S.stops[d.stopIdx],c=S.cons[s.ref],live=d.started&&!d.finished;let foot;
+    if(s.state==="delivered"||s.state==="failed")foot=`<button class="pill dark" type="button" data-a="goHome">Back to route</button>`;
+    else if(s.state==="arrived")foot=`<button class="pill lime" type="button" data-a="go" data-v="pod">${ic("edit")} Complete delivery</button><button class="pill danger" type="button" data-a="go" data-v="fail">Can't deliver</button>`;
+    else foot=`<div class="two"><button class="pill ghost" type="button" data-a="stopSheet" data-v="nav">${ic("nav")} Navigate</button><button class="pill lime" type="button" data-a="arrive" ${live?"":"disabled"}>I've arrived</button></div>${live?"":`<small class="muted" style="text-align:center">Tap Start Route before recording an arrival.</small>`}`;
+    if(live&&s.state==="pending")tool("Journey (detected automatically in the real app)",[["Vehicle reaches 15 minutes away","approach"],["Vehicle arrives at the stop","arrive"]]);
+    return {title:`Stop ${d.stopIdx+1} of ${S.stops.length}`,back:true,body:`
+    <div class="card"><div class="row top"><div class="grow"><p class="kicker">${esc(c.window)} window</p><h2>${esc(c.postcode)}</h2><p class="muted">${esc(c.address)}</p></div>${s.state==="delivered"?'<span class="tag">Delivered</span>':s.state==="failed"?'<span class="tag red">Failed</span>':s.state==="arrived"?`<span class="tag amber">Arrived ${esc(s.arrivedAt)}</span>`:""}</div>
+      <div class="facts"><div><small>Receiver</small><strong>${esc(c.receiver)}</strong></div><div><small>Sender</small><strong>${esc(c.sender)}</strong></div></div>
+      <button class="pill ghost sm" type="button" data-a="stopSheet" data-v="call" style="justify-self:start">${ic("phone")} Call ${esc(c.receiver)}</button></div>
+    <div class="card"><h3>Access notes</h3><p style="font-size:13.5px">${esc(c.notes||"None supplied")}</p>${c.stairs&&c.stairs!=="None"?`<span class="tag amber" style="justify-self:start">Stairs: ${esc(c.stairs)}</span>`:""}${c.parking?`<p class="muted">Parking: ${esc(c.parking)}</p>`:""}${c.accessPhotos?`<div class="photos">${shots(c.accessPhotos)}</div>`:""}</div>
+    <div class="card"><h3>Items to deliver</h3><div class="list">${c.items.map(l=>`<div class="row top" style="font-size:13px">${ic("box")}<span>${esc(l)}<br><small class="muted">${esc(c.specs[l])}</small></span></div>`).join("")}</div></div>
+    ${s.state==="delivered"?`<div class="note">${ic("check")}<span>Signed by ${esc(d.localPod[s.ref]||c.pod?.name||"receiver")}.</span></div>`:""}`,foot};},
+  pod(){const d=S.drv,s=S.stops[d.stopIdx],c=S.cons[s.ref],p=d.pod;
+    if(c.owner===P.number)return {title:"Proof of delivery",back:true,body:`<div class="note red">${ic("alert")}<span>This is your own delivery, so you can't sign for it. Ask your second crew member to complete it, or call dispatch.</span></div>`,foot:`<button class="pill ghost" type="button" data-a="back">Back to stop</button>`};
+    tool("Proof of delivery",[["Draw a test signature","sigTest"]]);
+    return {title:"Proof of delivery",back:true,body:`
+    <p class="muted">${esc(c.receiver)} · ${esc(c.postcode)}. Time and location are recorded by the phone.</p>
+    <div class="card"><h3>1. Scan each piece</h3><div class="list">${c.items.map(l=>`<div class="row" style="font-size:13px"><span class="dot ${p.scan[l]?"done":""}" style="width:24px;height:24px;font-size:11px">${p.scan[l]?ic("check"):""}</span><span class="grow">${esc(l)}</span></div>`).join("")}</div>${c.items.every(l=>p.scan[l])?"":`<button class="pill dark" type="button" data-a="podScanAll">${ic("scan")} Scan ${c.items.length} piece${c.items.length>1?"s":""}</button>`}</div>
+    <div class="card"><h3>2. Who received it?</h3>${field("podName","Receiver's name",{ph:"Full name"})}</div>
+    <div class="card"><div class="row"><h3 class="grow">3. Signature</h3><button class="chip" type="button" data-a="sigClear">Clear</button></div><canvas class="sig" data-sig width="620" height="260" aria-label="Sign with your finger or mouse"></canvas><small class="muted">Ask the receiver to sign above.</small></div>
+    <div class="card"><h3>4. Delivery photos</h3><div class="photos">${shots(p.photos)}${addPhoto("podPhoto",undefined,"Add delivery photo")}</div><small class="muted">At least one photo is needed.</small></div>
+    ${P.err.pod?`<div class="note red" role="alert">${ic("alert")}<span>${esc(P.err.pod)}</span></div>`:""}`,foot:`<button class="pill lime" type="button" data-a="podSubmit">${ic("check")} Submit proof of delivery</button>`};},
+  fail(){const d=S.drv,f=d.fail,c=S.cons[S.stops[d.stopIdx].ref],rs=["Receiver not home","Unsafe or no access","Refused by receiver","Item damaged","Wrong address","Vehicle problem"];return {title:"Can't deliver",back:true,body:`
+    <p class="muted">${esc(c.receiver)} · ${esc(c.postcode)}. Dispatch and the customer are told straight away.</p>
+    <div class="card"><h3>What happened?</h3><div class="chips">${rs.map(r=>`<button class="chip ${f.reason===r?"on":""}" type="button" data-a="failReason" data-v="${esc(r)}">${esc(r)}</button>`).join("")}</div></div>
+    <div class="card">${field("failNote","Note for dispatch (optional)",{area:true,ph:"What did you try?"})}<h3>Photo of the location</h3><div class="photos">${shots(f.photos)}${addPhoto("failPhoto",undefined,"Add photo")}</div></div>
+    ${P.err.fail?`<div class="note red" role="alert">${ic("alert")}<span>${esc(P.err.fail)}</span></div>`:""}`,foot:`<button class="pill danger" type="button" data-a="failSubmit">Record failed delivery</button>`};},
+  finish(){const d=S.drv,left=S.stops.filter(s=>s.state==="pending"||s.state==="arrived"),del=S.stops.filter(s=>s.state==="delivered").length,fl=S.stops.filter(s=>s.state==="failed").length,q=d.queue.length,blocked=left.length>0||q>0;return {title:"Finish route",back:true,body:`
+    <div class="card navy"><p class="kicker">Route summary</p><h2>${del} delivered, ${fl} failed</h2><p>${left.length?`${left.length} stop${left.length>1?"s":""} still need an outcome.`:"Every stop has an outcome."}</p></div>
+    <div class="list">${S.stops.map((s,i)=>{const c=S.cons[s.ref];return `<div class="item"><span class="dot ${s.state==="delivered"?"done":s.state==="failed"?"fail":""}">${s.state==="delivered"?ic("check"):s.state==="failed"?ic("x"):i+1}</span><span class="grow"><strong>${esc(c.postcode)}</strong><small>${esc(c.receiver)}</small></span><span class="tag ${s.state==="delivered"?"":s.state==="failed"?"red":"amber"}">${s.state==="delivered"?"Delivered":s.state==="failed"?"Failed":"No outcome"}</span></div>`}).join("")}</div>
+    ${left.length?`<div class="note amber">${ic("alert")}<span>You can't finish until every stop has an outcome.</span></div>`:""}
+    ${q?`<div class="note amber">${ic("off")}<span>${q} action${q>1?"s are":" is"} waiting to upload. Get signal before finishing.</span></div>`:""}`,foot:`<button class="pill lime" type="button" data-a="finishRoute" ${blocked?"disabled":""}>${ic("flag")} ${blocked?"Not ready to finish":"Finish route and stop GPS"}</button>`};},
+  messages(){const d=S.drv;tool("Dispatch",[["Dispatch adds an access note","dispatchNote"]]);return {title:"Dispatch",mark:true,tabs:"messages",body:`
+    ${d.msgs.map(m=>`<div class="bubble ${m.me?"me":""}">${esc(m.x)}<small>${esc(m.t)}</small></div>`).join("")}
+    <div class="chips">${["Running 15 minutes late","Traffic on the M1","Customer not answering"].map(t=>`<button class="chip" type="button" data-a="quickMsg" data-v="${esc(t)}">${esc(t)}</button>`).join("")}</div>`,foot:`<div class="row"><div class="grow">${field("msg","Message")}</div><button class="pill lime sm" style="align-self:flex-end" type="button" data-a="sendMsg">Send</button></div>`};},
+  history(){const d=S.drv,past=[["Wed 4 Nov","Bradford to London","4 delivered, 0 failed","5h 42m","402 miles"],["Sun 1 Nov","Bradford to Northampton","4 delivered, 1 failed","4h 18m","268 miles"],["Sat 31 Oct","Bradford to Glasgow / Edinburgh","5 delivered, 0 failed","9h 05m","436 miles"],["Wed 28 Oct","Bradford to London","6 delivered, 0 failed","6h 11m","418 miles"]],today=d.finished?[["Wed 11 Nov","Bradford to London",`${S.stops.filter(s=>s.state==="delivered").length} delivered, ${S.stops.filter(s=>s.state==="failed").length} failed`,`Finished ${d.finishedAt}`,"About 410 miles"]]:[];return {title:"Job history",mark:true,tabs:"history",body:`
+    <div class="list">${[...today,...past].map(j=>`<button class="item" type="button" data-a="histOpen" data-v="${esc(j.join("|"))}"><span class="dot done">${ic("check")}</span><span class="grow"><strong>${esc(j[1])}</strong><small>${esc(j[0])} · ${esc(j[2])}</small></span>${ic("next")}</button>`).join("")}</div>`};},
+
+  /* ---------- Customer and guest ---------- */
+  chome(){const g=P.mode==="guest",a=me(),mine=g?[]:Object.values(S.cons).filter(c=>c.owner===P.number&&c.status!=="delivered");const active=mine.find(c=>S.stops.some(s=>s.ref===c.ref))||mine[0];return {brand:true,tabs:"chome",body:`
+    ${active?`<button class="item" type="button" data-a="openTrack" data-v="${active.ref}"><span class="dot now">${ic("truck")}</span><span class="grow"><strong>${esc((STAGE[active.status]||{}).label||"")}</strong><small>${esc(active.summary)} · ${esc(active.date)}</small></span>${ic("next")}</button>`:""}
+    <div class="two"><button class="pill lime" type="button" data-a="startQuote">Instant price</button><button class="pill dark" type="button" data-a="go" data-v="qr">${ic("qr")} Scan to track</button></div>
+    <div class="card"><div class="hero-img"><img src="assets/atlasmove-van.jpg" alt="AtlasMove two-person delivery crew unloading a van"></div><p class="kicker">Two-person delivery from Bradford</p><h2 style="font-size:22px">${g?"Furniture delivery you can plan, track and prove.":`Hello ${esc(a.name.split(" ")[0])}`}</h2></div>
+    ${g?`<button class="pill ghost" type="button" data-a="toLogin">Sign in or sign up to book</button>`:""}
+    <div class="card"><p class="kicker">Regular routes</p><div class="list">${[["Wednesday","Bradford to London"],["Saturday","Bradford to Glasgow / Edinburgh"],["Sunday","Bradford to Northampton"]].map(r=>`<div class="row" style="font-size:13.5px">${ic("truck")}<span class="grow"><strong>${r[1]}</strong></span><span class="tag grey">${r[0]}</span></div>`).join("")}</div></div>`};},
+  q1(){const f=P.form;tool("Quote test data",[["Fill a standard job","qFill","standard"],["Fill an unusual job","qFill","review"]]);TOOLS[P.id].push({title:"Note",text:"Prices use made-up placeholder rates, not AtlasMove's real prices."});
+    const chips=(key,list)=>`<div class="chips">${list.map(x=>`<button class="chip ${f[key]===x?"on":""}" type="button" data-a="setF" data-k="${key}" data-v="${esc(x)}">${esc(x)}</button>`).join("")}</div>`;
+    return {title:"Instant price",back:true,body:`
+    <div class="card"><div class="two">${field("from","Collect from",{ph:"BD8 7SG"})}${field("to","Deliver to",{ph:"NN1 4AB"})}</div></div>
+    <div class="card"><h3>What's moving?</h3>${chips("item",Object.keys(ITEM_RATE))}<div class="row"><strong class="grow">Pieces</strong><button class="iconbtn" type="button" data-a="pieces" data-v="-1" aria-label="Fewer pieces">−</button><strong style="min-width:24px;text-align:center">${esc(f.pieces)}</strong><button class="iconbtn" type="button" data-a="pieces" data-v="1" aria-label="More pieces">+</button></div></div>
+    <button class="setrow" type="button" data-a="moreToggle" style="border:1px solid var(--line);border-radius:14px"><span class="grow"><strong>${P.more?"Fewer options":"More options"}</strong><small>${esc(f.service)} · ${esc(f.weight)} · Stairs: ${esc(f.stairs)}</small></span>${ic("next")}</button>
+    ${P.more?`<div class="card"><h3>Heaviest piece</h3>${chips("weight",[...Object.keys(WEIGHT_RATE),"Over 125kg or unsure"])}<h3>Delivery service</h3>${chips("service",["Doorstep or ground floor","Room of choice","Custom handling","Not sure, advise me"])}<h3>Stairs at delivery</h3>${chips("stairs",["None","1 flight","2 or more flights"])}<h3>Delivery window</h3>${chips("window",["Any time","Morning","Afternoon","2-hour slot"])}</div>`:""}
+    <div data-price>${priceCard()}</div>`,foot:priceCta()};},
+  q5(){const f=P.form,p=priceQuote(f),addr=(key,pc)=>f[key].trim().length>=5?"":`<div class="chips">${addrOptions(pc).map(x=>`<button class="chip" type="button" data-a="setF" data-k="${key}" data-v="${esc(x)}">${esc(x)}</button>`).join("")}</div>`;return {title:"Book delivery",back:true,body:`
+    <div class="card"><div class="row"><div class="grow"><strong>${esc(normPc(f.from))} to ${esc(normPc(f.to))}</strong><br><small class="muted">${esc(f.pieces)} × ${esc(f.item)}</small></div><strong style="font-size:20px">${p.review?"Price to follow":money(p.total)}</strong></div></div>
+    <div class="card"><h3>Which date?</h3><div class="chips">${["Wed 18 Nov","Sat 21 Nov","Sun 22 Nov","Wed 25 Nov"].map(x=>`<button class="chip ${f.date===x?"on":""}" type="button" data-a="setF" data-k="date" data-v="${x}">${x}</button>`).join("")}</div></div>
+    <div class="card">${field("fromAddr",`Collection address, ${normPc(f.from)}`,{ph:"Tap one below or type"})}${addr("fromAddr",f.from)}${field("toAddr",`Delivery address, ${normPc(f.to)}`,{ph:"Tap one below or type"})}${addr("toAddr",f.to)}</div>
+    <div class="card">${field("receiver","Receiver",{ph:"Mobile or email"})}<small class="muted">We've filled in your number. Change it if someone else will receive it.</small></div>
+    <small class="muted" style="text-align:center">By continuing you accept the delivery terms.</small>`,foot:`<button class="pill lime" type="button" data-a="q5Next">${p.review?"Send for review":`Continue to pay ${money(p.total)}`}</button>`};},
+  pay(){const b=curBooking(),m=P.payMethod;tool("Payment",[["Fill Stripe test card","cardFill"],["Make the payment fail","payFail"]]);return {title:"Pay securely",back:true,body:`
+    <div class="card navy"><p class="kicker">Amount to pay · ${esc(b.id)}</p><div class="price">${money(b.price)}</div><p>${esc(b.route)} · ${esc(b.date)}</p></div>
+    ${m==="card"?`<div class="card">${field("cardNo","Card number",{mode:"numeric",ph:"1234 1234 1234 1234"})}<div class="two">${field("cardExp","Expiry",{ph:"MM/YY"})}${field("cardCvc","CVC",{mode:"numeric",ph:"123"})}</div><small class="muted">${ic("lock")} Powered by Stripe. AtlasMove never sees your card.</small></div>`:""}
+    <div class="note">${ic("shield")}<span>Your tracking ID is issued as soon as payment is confirmed.</span></div>
+    ${P.err.pay?`<div class="note red" role="alert">${ic("alert")}<span>${esc(P.err.pay)}</span></div>`:""}`,foot:`<button class="pill ${m==="apple"?"dark":"lime"}" type="button" data-a="pay">${ic("lock")} ${m==="apple"?`Pay ${money(b.price)} with Apple Pay`:`Pay ${money(b.price)}`}</button><button class="pill ghost" type="button" data-a="payM" data-v="${m==="apple"?"card":"apple"}">${m==="apple"?"Pay by card instead":"Use Apple Pay instead"}</button>`};},
+  booking(){const b=curBooking();if(!b)return SC.bookings();const steps=[["requested","Request received"],["offered","Price ready"],["paid","Payment confirmed"],["confirmed","Booking confirmed, tracking ID issued"]],at=steps.findIndex(s=>s[0]===b.status);if(b.status==="requested")tool("Dispatch",[["Team sends a price of £285.00","teamPrice"]]);return {title:"Quote status",back:true,body:`
+    <div class="card"><p class="kicker">${esc(b.id)}</p><h2>${esc(b.route)}</h2><p class="muted">${esc(b.summary)} · ${esc(b.date)} · ${esc(b.window)}</p></div>
+    <div class="card"><div class="list">${steps.map((s,i)=>`<div class="row"><span class="dot ${i<at||b.status==="confirmed"?"done":i===at?"now":""}" style="width:28px;height:28px">${i<=at?ic("check"):i+1}</span><span class="grow" style="font-size:13.5px;${i>at?"color:var(--muted)":"font-weight:650"}">${s[1]}</span>${b.log[s[0]]?`<small class="muted">${esc(b.log[s[0]])}</small>`:""}</div>`).join("")}</div></div>
+    ${b.status==="requested"?`<div class="note amber">${ic("clock")}<span>Our Bradford team is reviewing this job. We normally respond in about 10 minutes during operating hours.</span></div>`:""}
+    ${b.status==="offered"?`<div class="card navy"><p class="kicker">Your price</p><div class="price">${money(b.price)}</div></div>`:""}
+    ${b.ref?`<div class="card"><small class="muted">Tracking ID</small><strong>${esc(b.ref)}</strong></div>`:""}`,foot:b.status==="offered"?`<button class="pill lime" type="button" data-a="go" data-v="pay">Accept price and pay</button>`:b.ref?`<button class="pill lime" type="button" data-a="openTrack" data-v="${b.ref}">${ic("search")} Track this delivery</button>`:""};},
+  track(){return {title:"Track a delivery",mark:true,bell:true,tabs:"track",body:`
+    <button class="card navy" type="button" data-a="go" data-v="qr" style="text-align:left;width:100%"><div class="row"><span class="dot now">${ic("qr")}</span><span class="grow"><strong style="font-size:16px">Scan QR code</strong><br><span style="color:#cfe0da;font-size:13px">From your label or confirmation message</span></span>${ic("next")}</div></button>
+    <div class="card"><p class="kicker">Or type your tracking ID</p>${field("track","Tracking ID",{ph:"ATM-261111-A1B2C3D4E5F6"})}<button class="pill lime" type="button" data-a="trackGo">Open tracking</button></div>
+    ${P.err.notfound?`<div class="note red" role="alert">${ic("alert")}<span>${esc(P.err.notfound)}</span></div>`:""}
+    ${P.mode==="guest"?`<div class="note grey">${ic("shield")}<span>You don't need an account to track a delivery.</span></div>`:""}`};},
+  qr(){tool("Point camera at a QR code",[["Amelia's sofa, on today's route","qrScan",HERO],["Bookcase, next week","qrScan",NEXT],["Delivered bed","qrScan",DONE],["Missed delivery","qrScan",MISSED],["QR that isn't AtlasMove","qrScan","BAD"]]);return {title:"Scan QR code",back:true,body:`
+    <div class="viewfinder"><div class="frame"></div><span>Point your camera at the QR code</span></div>
+    ${P.qrError?`<div class="note red" role="alert">${ic("alert")}<span>${esc(P.qrError)}</span></div>`:`<p class="muted" style="text-align:center">It's on your item label and confirmation message.</p>`}`,foot:`<button class="pill ghost" type="button" data-a="tabTo" data-v="track">Type the tracking ID instead</button>`};},
+  result(){const c=S.cons[P.trackRef],st=STAGE[c.status]||STAGE.confirmed,p=POS[c.status]??0,eta=etaFor(c.ref),onRoute=S.stops.some(s=>s.ref===c.ref),mapOn=S.drv.started&&!S.drv.finished&&onRoute&&!["delivered","delivery_failed"].includes(c.status),del=c.status==="delivered",fl=c.status==="delivery_failed",active=!del&&!fl,own=owned(c),locked=S.drv.started&&onRoute;return {title:"Your delivery",back:true,bell:P.mode==="customer",body:`
+    ${mapOn?custMap(c):""}
+    <div class="card"><div class="row top"><div class="grow"><small class="muted" style="font-weight:800;letter-spacing:.08em;font-size:11px">CURRENT DELIVERY STAGE</small><h2>${esc(st.label)}</h2></div><span class="tag ${fl?"red":""}">${fl?"Attention":"Secure view"}</span></div><p class="muted">${esc(st.detail)}</p>
+      <div class="stageflow"><span class="fill" style="width:${p*20}%"></span>${FLOW.map((f,i)=>`<div class="${i<p||(i===p&&del)?"complete":i===p?"current":""}"><i>${i<p||(i===p&&del)?"✓":""}</i><span>${f[1]}</span></div>`).join("")}</div>
+      <div class="facts" style="border-top:1px solid var(--line);padding-top:10px"><div><small>Tracking ID</small><strong>${esc(c.ref)}</strong></div><div><small>Estimated arrival</small><strong data-live="eta">${del?"Delivered":fl?"Being reviewed":eta?hhmm(eta.at):"Starts when the driver departs"}</strong></div><div><small>Current location</small><strong>${mapOn?(S.drv.online?"Live vehicle location":"Waiting for signal"):esc(st.location)}</strong></div><div><small>Delivery window</small><strong>${esc(c.date)}, ${esc(c.window)}</strong></div></div></div>
+    ${!mapOn&&active?`<div class="note grey">${ic("pin")}<span>The live map appears when the driver starts the route.</span></div>`:""}
+    ${del?`<div class="note">${ic("check")}<span>Delivered ${esc(c.pod?.at||"")}.</span></div><button class="pill dark" type="button" data-a="go" data-v="proof">${ic("file")} View proof of delivery</button>`:""}
+    ${del&&own?`<button class="pill ghost" type="button" data-a="goRate">${c.rating?"View your rating":"Rate and report a problem"}</button>`:""}
+    ${fl?`<div class="note red">${ic("alert")}<span>Attempted ${esc(c.failure?.at||"")}: ${esc(c.failure?.reason||"")}.</span></div>`:""}
+    ${fl&&own?(c.rebooked?`<div class="note">${ic("check")}<span>New date requested: ${esc(c.rebooked)}. Dispatch will confirm it.</span></div>`:`<button class="pill lime" type="button" data-a="goRebook">Choose a new date</button>`):""}
+    ${active&&own?`<div class="two"><button class="pill ghost" type="button" data-a="goChange2" style="font-size:13px">Change details</button><button class="pill ghost" type="button" data-a="goInstr" style="font-size:13px">Instructions</button></div>${locked?`<small class="muted" style="text-align:center">The route has started, so changes go to dispatch.</small>`:""}`:""}
+    ${!own?`<div class="note grey">${ic("user")}<span>${P.mode==="guest"?"Sign in to change this delivery or see the full proof.":"This delivery belongs to another account, so you see limited details."}</span></div>`:""}
+    <div class="card"><h3>Status history</h3><div class="list">${[...c.events].reverse().slice(0,6).map(e=>`<div class="row" style="font-size:13px"><span class="grow">${esc(e.type)}</span><small class="muted">${esc(e.t)}</small></div>`).join("")}</div></div>
+    <div class="note grey">${ic("shield")}<span>Other customers, addresses and route stops remain private.</span></div>`};},
+  proof(){const c=S.cons[P.trackRef],pod=c.pod;if(!owned(c))return {title:"Proof of delivery",back:true,body:`<div class="card"><p class="kicker">Delivered</p><h2>${esc(pod?.at||"")}</h2><p style="font-size:13.5px" class="muted">The receiver's name, signature and photos are private. Sign in with the booking's mobile number to see them.</p></div>${P.mode==="guest"?`<button class="pill lime" type="button" data-a="toLogin">Sign in</button>`:""}`};
+    return {title:"Proof of delivery",back:true,body:`
+    <div class="card"><div class="facts"><div><small>Received by</small><strong>${esc(pod.name)}</strong></div><div><small>Delivered</small><strong>${esc(pod.at)}</strong></div><div><small>GPS at handover</small><strong>${esc(pod.gps||"52.2405, -0.9027")}</strong></div><div><small>Tracking ID</small><strong>${esc(c.ref)}</strong></div></div></div>
+    <div class="card"><h3>Signature</h3>${pod.sig?`<img class="sigview" src="${pod.sig}" alt="Receiver's signature">`:`<svg class="sigview" viewBox="0 0 300 110" role="img" aria-label="Receiver's signature"><path d="M40 70c20-40 30-40 34-14s10 18 24-8 22-14 26 6 18 2 34-10 32 8 66-10" fill="none" stroke="#172522" stroke-width="2.5" stroke-linecap="round"/></svg>`}</div>
+    <div class="card"><h3>Photos</h3><div class="photos">${shots(pod.photos||0)}</div></div>
+    <button class="pill ghost" type="button" data-a="pdf">${ic("file")} Save proof as PDF</button>`};},
+  inbox(){const a=me();return {title:"Notifications",back:true,body:a.inbox.length?`<div class="list">${a.inbox.map(n=>`<button class="item" type="button" data-a="${n.booking?"openBooking":"openTrack"}" data-v="${n.booking||n.ref}"><span class="dot">${ic("bell")}</span><span class="grow"><strong>${esc(n.title)}</strong><small>${esc(n.body)}</small><small>${esc(n.at)} · ${esc(n.channel)}</small></span></button>`).join("")}</div>`:`<div class="card"><h3>No notifications yet</h3><p class="muted">Updates appear here when your delivery is confirmed, on its way, approaching or delivered.</p></div>`};},
+  help(){const top=P.mode==="guest";return {title:"Get help",mark:top,back:!top,tabs:top?"help":null,body:`
+    <div class="card"><p class="kicker">Talk to us</p><h2>Our Bradford team can help.</h2><div class="list">
+      <button class="item" type="button" data-a="openExt" data-v="WhatsApp"><span class="dot wa">${ic("msg")}</span><span class="grow"><strong>WhatsApp</strong><small>+44 7594 705450</small></span>${ic("next")}</button>
+      <button class="item" type="button" data-a="openExt" data-v="Mail"><span class="dot">${ic("mail")}</span><span class="grow"><strong>Email</strong><small>support@atlasmove.co.uk</small></span>${ic("next")}</button>
+      ${top?"":`<button class="item" type="button" data-a="go" data-v="chat"><span class="dot">${ic("msg")}</span><span class="grow"><strong>Chat with support</strong><small>Message us here</small></span>${ic("next")}</button>`}</div></div>
+    <div class="card"><h3>Common questions</h3><div class="list" style="font-size:13.5px"><div><strong>When does tracking start?</strong><br><span class="muted">When the driver taps Start Route.</span></div><div><strong>Can other customers see my address?</strong><br><span class="muted">No. You see only your own delivery.</span></div><div><strong>Do I need an account?</strong><br><span class="muted">Not to track or get a price. You need one to book.</span></div></div></div>`};},
+  chat(){const a=me();return {title:"Chat with support",back:true,body:a.chat.map(m=>`<div class="bubble ${m.me?"me":""}">${esc(m.x)}<small>${esc(m.t)}</small></div>`).join(""),foot:`<div class="row"><div class="grow">${field("chat","Message")}</div><button class="pill lime sm" style="align-self:flex-end" type="button" data-a="chatSend">Send</button></div>`};},
+  change(){const c=S.cons[P.trackRef],locked=S.drv.started&&S.stops.some(s=>s.ref===c.ref);return {title:"Change details",back:true,body:`<p class="muted">${esc(c.ref)}</p>${locked?`<div class="note amber">${ic("lock")}<span>The route has started, so this goes to dispatch as a request and may not be possible today.</span></div>`:`<div class="note">${ic("check")}<span>You can change these until the route is locked.</span></div>`}<div class="card">${field("changeNotes","Access notes",{area:true})}${field("changeDate","Request a different date",{options:["Wed 18 Nov","Wed 25 Nov"],ph:"Keep "+c.date})}</div>`,foot:`<button class="pill lime" type="button" data-a="changeSave">${locked?"Send request to dispatch":"Save changes"}</button>`};},
+  instr(){const c=S.cons[P.trackRef];return {title:"Delivery instructions",back:true,body:`<p class="muted">The driver sees these at your stop.</p><div class="card">${field("stairsEdit","Stairs",{options:["None","1 flight","2 or more flights"]})}${field("parking","Parking",{ph:"Where can the van stop?"})}<h3>Access photos</h3><div class="photos">${shots(c.accessPhotos)}${addPhoto("accessPhoto",undefined,"Add access photo")}</div></div>`,foot:`<button class="pill lime" type="button" data-a="instrSave">Send to driver</button>`};},
+  rebook(){const c=S.cons[P.trackRef];return {title:"Choose a new date",back:true,body:`<p class="muted">${esc(c.summary)}</p><div class="note red">${ic("alert")}<span>${esc(c.failure?.reason||"Delivery attempted")}. Tap your next route date and dispatch will confirm it.</span></div><div class="list">${["Sun 15 Nov","Wed 18 Nov","Sun 22 Nov"].map(x=>`<button class="item" type="button" data-a="rebookPick" data-v="${x}"><span class="dot">${ic("truck")}</span><span class="grow"><strong>${x}</strong></span>${ic("next")}</button>`).join("")}</div>`};},
+  rate(){const c=S.cons[P.trackRef];if(!c.rating)return {title:"Rate your delivery",back:true,body:`<p class="muted">${esc(c.summary)}</p><div class="card"><h3>How did it go? Tap a star to send.</h3><div class="stars" role="group" aria-label="Rating">${[1,2,3,4,5].map(n=>`<button type="button" data-a="star" data-v="${n}" aria-label="${n} star${n>1?"s":""}">★</button>`).join("")}</div></div>`};
+    return {title:"Your rating",back:true,body:`<div class="note">${ic("check")}<span>Thank you. You rated this delivery ${c.rating} out of 5.</span></div>
+    ${c.claim?`<div class="note amber">${ic("alert")}<span>Damage report ${esc(c.claim)} is open. Dispatch will contact you.</span></div>`:`<div class="card"><h3>Was anything damaged?</h3><p class="muted">Add a photo and we'll open a report.</p><div class="photos">${shots(P.rateDamagePhotos)}${addPhoto("damagePhoto",undefined,"Add damage photo")}</div></div>${P.err.rate?`<div class="note red" role="alert">${ic("alert")}<span>${esc(P.err.rate)}</span></div>`:""}${P.rateDamagePhotos||!VALIDATE?`<button class="pill lime" type="button" data-a="rateSend">Report damage</button>`:""}`}`};},
+  bookings(){const a=me(),mine=Object.values(S.cons).filter(c=>c.owner===P.number);return {title:"My bookings",mark:true,bell:true,tabs:"bookings",body:`
+    ${a.bookings.length?`<p class="kicker">Quotes</p><div class="list">${a.bookings.map(b=>`<button class="item" type="button" data-a="openBooking" data-v="${b.id}"><span class="dot now">${ic("box")}</span><span class="grow"><strong>${esc(b.id)}</strong><small>${esc(b.route)} · ${esc(b.date)}</small></span><span class="tag ${b.status==="confirmed"?"":"amber"}">${esc(bookingLabel(b.status))}</span></button>`).join("")}</div>`:""}
+    <p class="kicker">Deliveries</p>
+    ${mine.length?`<div class="list">${mine.map(k=>`<div class="card"><div class="row top"><div class="grow"><strong>${esc(k.summary)}</strong><br><small class="muted">${esc(k.date)} · ${esc(k.postcode)}</small></div><span class="tag ${k.status==="delivery_failed"?"red":""}">${esc((STAGE[k.status]||{}).label||k.status)}</span></div><div class="chips"><button class="chip" type="button" data-a="openTrack" data-v="${k.ref}">Track</button><button class="chip" type="button" data-a="repeat" data-v="${k.ref}">Book again</button><button class="chip" type="button" data-a="invoice" data-v="${k.ref}">Invoice</button></div></div>`).join("")}</div>`:`<div class="card"><h3>No deliveries yet</h3><p class="muted">Get an instant price to book your first delivery.</p><button class="pill lime" type="button" data-a="go" data-v="q1">Get an instant price</button></div>`}`};},
+  business(){const rows=Object.values(S.cons).filter(k=>k.owner===NUM.biz),open=rows.filter(k=>k.status!=="delivered").length;return {title:"Business portal",back:true,body:`<p class="muted">Test Furniture Co · AM-PTR-0042</p>
+    <div class="card"><div class="facts"><div><small>Total consignments</small><strong>${rows.length}</strong></div><div><small>Open jobs</small><strong>${open}</strong></div></div></div>
+    <button class="pill lime" type="button" data-a="go" data-v="q1">${ic("box")} Book a consignment</button>
+    <div class="list">${rows.map(k=>`<button class="item" type="button" data-a="openTrack" data-v="${k.ref}"><span class="dot">${ic("box")}</span><span class="grow"><strong>${esc(k.summary)} · ${esc(k.postcode)}</strong><small>${esc(k.ref)}</small></span><span class="tag ${k.status==="delivery_failed"?"red":""}">${esc((STAGE[k.status]||{}).label)}</span></button>`).join("")}</div>
+    <div class="note grey">${ic("shield")}<span>Only your company's bookings are visible in this account.</span></div>`};}
+};
+const addrOptions=pc=>{const p=normPc(pc);const known={"NN1 4AB":["8 Orchard Close, Northampton","10 Orchard Close, Northampton"],"BD8 7SG":["215 Lumb Lane, Bradford","2 Canal Works, Bradford"],"IV2 3PY":["4 Firth View, Inverness"]};return known[p]||[`1 High Street, ${p}`,`2 High Street, ${p}`];};
+const pcOk=v=>POSTCODE.test(normPc(v));
+const quoteReady=()=>!VALIDATE||(pcOk(P.form.from)&&pcOk(P.form.to));
+const qf=()=>{const f=P.form;return VALIDATE?f:Object.assign({},f,{from:pcOk(f.from)?f.from:TEST_DEFAULTS.from,to:pcOk(f.to)?f.to:TEST_DEFAULTS.to});};
+function priceCard(){if(!quoteReady())return `<div class="card navy"><p class="kicker">Your price</p><p>Enter both full postcodes and your price appears here.</p></div>`;const p=priceQuote(qf());if(p.review)return `<div class="note amber">${ic("alert")}<span>A person needs to check this job. We normally send a price in about 10 minutes during operating hours. ${esc(p.reasons.join(". "))}.</span></div>`;return `<div class="card navy"><p class="kicker">Your instant price</p><div class="price">${money(p.total)}</div><div class="lines">${p.lines.map(l=>`<div><span>${esc(l[0])}</span><strong>${money(l[1])}</strong></div>`).join("")}</div></div>`;}
+function priceCta(){const ok=quoteReady(),p=ok?priceQuote(qf()):null,g=P.mode==="guest";return `<button class="pill lime" type="button" data-a="bookNow" ${ok?"":"disabled"}>${!ok?"Enter your postcodes":g?(p.review?"Sign up to request a price":`Sign up to book for ${money(p.total)}`):(p.review?"Request a price":`Book for ${money(p.total)}`)}</button>`;}
+function prepQ5(){const f=P.form;if(!f.date)f.date="Wed 18 Nov";if(!f.receiver&&P.number)f.receiver=fmtNum(P.number);}
+function afterStop(){tab("home");const nx=nextStopIdx();if(nx>=0)A.openStop(nx);else go("finish");}
+const curBooking=()=>{const a=me();return a?a.bookings.find(b=>b.id===P.bookingId):null;};
+const bookingLabel=s=>({requested:"Being reviewed",offered:"Price ready",paid:"Paid",confirmed:"Confirmed"}[s]||s);
+
+/* ---------- Rendering ---------- */
+const STATUS_ICONS=`<svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor" aria-hidden="true"><rect y="7" width="3" height="4" rx=".7"/><rect x="4.3" y="5" width="3" height="6" rx=".7"/><rect x="8.6" y="2.5" width="3" height="8.5" rx=".7"/><rect x="13" width="3" height="11" rx=".7"/></svg><svg width="22" height="11" viewBox="0 0 24 12" fill="none" aria-hidden="true"><rect x=".5" y=".5" width="20" height="11" rx="3" stroke="currentColor"/><rect x="2" y="2" width="16" height="8" rx="1.5" fill="currentColor"/><rect x="22" y="4" width="2" height="4" rx="1" fill="currentColor"/></svg>`;
+function compose(sc){
+  const t=P.toast&&P.toast.until>Date.now()?`<div class="toast" role="status">${ic("bell")}<div><strong>${esc(P.toast.title)}</strong>${esc(P.toast.body)}</div></div>`:"";
+  const wa=P.wa?`<button class="toast wa" type="button" data-a="fillCode"><span class="dot wa">${ic("msg")}</span><span><strong>WhatsApp · AtlasMove</strong>Your verification code is ${esc(P.wa)}. Tap to fill it in.</span></button>`:"";
+  const busy=P.busy?`<div class="busy" role="status"><div class="spin"></div><span>${esc(P.busy)}</span></div>`:"";
+  const sheet=P.sheet?`<div class="sheet-wrap" data-a="closeSheet" data-bg="1"><div class="sheet ${P.sheetClass||""}" role="dialog" aria-modal="true">${P.sheet}</div></div>`:"";
+  if(sc.splash) return `<div class="splash"><div class="splash-in">${appMark("big")}<div class="word"><b>Atlas</b><b>Move</b></div><svg class="road" viewBox="0 0 154 15" aria-hidden="true"><path d="M2 5.5C21 5.5 23 12 42 12S64 3 83 4.5s20 7 38 5.5 20-7 27-5"/><circle cx="149" cy="5" r="3.5"/></svg><small>Delivery you can plan, track and prove</small></div></div><div class="homebar light"></div>`;
+  const d=P.mode==="driver",g=P.mode==="guest",c=P.mode==="customer",a=me();
+  const tabs=d?[["home","Route","truck"],["messages","Dispatch","msg",S.drv.unread],["history","History","hist"],["settings","Settings","gear"]]:g?[["chome","Home","home"],["track","Track","search"],["help","Help","help"],["__login","Sign in","user"]]:c?[["chome","Home","home"],["track","Track","search"],["bookings","Bookings","box"],["settings","Settings","gear"]]:[];
+  const bell=`<button class="iconbtn" type="button" data-a="openInbox" aria-label="Notifications">${ic("bell")}${a&&a.unread?`<span class="badge">${a.unread}</span>`:""}</button>`;
+  const hdr=sc.navy?"":sc.brand?`<div class="ahead dark">${logo(true)}<span class="grow"></span>${g?`<span class="tag amber">Guest</span>`:bell}</div>`:`<div class="ahead">${sc.back?`<button class="iconbtn" type="button" data-a="back" aria-label="Back">${ic("back")}</button>`:sc.mark?appMark():""}<h1>${esc(sc.title||"")}</h1>${sc.bell&&c?bell:""}</div>`;
+  const off=d&&!S.drv.online?`<div class="modebar"><span class="pdot off"></span>No signal. Actions are saved on this phone${S.drv.queue.length?` (${S.drv.queue.length} waiting)`:""}.</div>`:"";
+  const routeLive=c&&a&&a.driver==="on"&&S.drv.started&&!S.drv.finished?`<button class="modebar live" type="button" data-a="switchMode"><span class="pdot"></span>Route still active. GPS is running. Tap to go back.</button>`:"";
+  const tb=sc.tabs?`<nav class="tabs" aria-label="Main navigation">${tabs.map(x=>`<button type="button" class="${sc.tabs===x[0]?"on":""}" data-a="tabTo" data-v="${x[0]}"${sc.tabs===x[0]?' aria-current="page"':""}>${ic(x[2])}${x[1]}${x[3]?`<span class="badge">${x[3]}</span>`:""}</button>`).join("")}</nav>`:"";
+  const barCls=sc.navy||sc.brand?"dark":"";
+  return `<div class="sbar ${barCls}"><span>${hhmm()}</span><span>${d&&!S.drv.online?"No signal":STATUS_ICONS}</span></div>${hdr}${off}${routeLive}<div class="body${P._enter?" enter":""}" style="${sc.navy?"background:var(--navy)":""}">${sc.body}</div>${sc.foot?`<div class="foot">${sc.foot}</div>`:""}${tb}${sheet}${t}${wa}${busy}<div class="homebar ${sc.navy&&!sc.foot?"light":""}"></div>`;
+}
+const scrollMem={};
+function renderPhone(id){
+  P=S.phones[id]; TOOLS[id]=[];
+  const el=document.getElementById("phone-"+id),prev=el.querySelector(".body"),key=id+":"+P.route;
+  if(prev&&scrollMem[id]?.key===key){scrollMem[id].top=prev.scrollTop;P._enter=false;}else{P._enter=!!scrollMem[id];scrollMem[id]={key,top:0};}
+  const sc=SC[P.route]();
+  el.innerHTML=compose(sc);
+  const b=el.querySelector(".body");if(b)b.scrollTop=scrollMem[id].top;
+  (COVERS[P.route]||[]).forEach(f=>S.seen.add(f));
+  if(P.route==="pod")initSig(el);
+}
+const shell=document.getElementById("shell");
+const modeName=p=>p.route==="splash"?"Opening":p.mode==="driver"?"Driver":p.mode==="customer"?"Customer":p.mode==="guest"?"Guest":"Signed out";
+function btn(label,a,v,p,cls=""){return `<button class="rbtn ${cls}" type="button" data-a="${a}"${v!==undefined?` data-v="${esc(v)}"`:""}${p?` data-p="${p}"`:""}>${esc(label)}</button>`;}
+function renderRail(){
+  const cur=new Set(COVERS[S.phones.a.route]||[]);
+  const people=[[NUM.driver,"Driver","Daniel Whitaker"],[NUM.amelia,"Customer","Amelia Hart"],[NUM.both,"Driver and customer","Bilal Ahmed"],[NUM.off,"Driver, access off","Marek Nowak"],[NUM.biz,"Business customer","Test Furniture Co"],[NUM.fresh,"New number","Goes to sign-up"]];
+  const ids=[[HERO,"Today, Amelia's sofa"],[NEXT,"Confirmed, next week"],[DONE,"Delivered"],[MISSED,"Missed delivery"]];
+  const lastN=Object.values(S.accounts).flatMap(a=>a.inbox.map(n=>({n,who:a.name}))).find(x=>x.n.at);
+  let h=`<div class="rsec">Change user</div><div class="rcard"><div class="rbtns">${btn("Driver","quick",NUM.driver,"a",S.phones.a.mode==="driver"?"lime":"")}${btn("Customer","quick",NUM.amelia,"a",S.phones.a.mode==="customer"?"lime":"")}${btn("Guest","guest",undefined,"a",S.phones.a.mode==="guest"?"lime":"")}${btn("Sign out","signOut",undefined,"a")}</div>${lastN?`<small>Latest customer update, to ${esc(lastN.who)}: ${esc(lastN.n.title)}</small>`:""}</div><div class="rsec">Input validation</div><div class="rcard"><div class="rrow"><span><strong>${VALIDATE?"On":"Off for test run"}</strong><br><small>${VALIDATE?"Fields and codes are checked like the real app.":"Empty fields pass. With no number, login asks driver or customer."}</small></span>${btn(VALIDATE?"Turn off":"Turn on","validationToggle")}</div></div><div class="rsec">Log in with</div>`;
+  h+=people.map(x=>`<div class="rcard"><div class="rrow"><span><strong>${fmtNum(x[0])}</strong><br><small>${esc(x[1])} · ${esc(x[2])}</small></span>${btn("Use","quick",x[0],"a")}</div></div>`).join("");
+  h+=`<div class="rcard"><small>Use skips the code and changes user, keeping the delivery as it is. To test WhatsApp login, type a number on the phone.</small></div>`;
+  ["a"].forEach(id=>{const list=TOOLS[id];if(!list.length)return;h+=`<div class="rsec">This screen</div><div class="rcard">`+list.map(t=>t.text?`<small>${esc(t.text)}</small>`:`<div><small>${esc(t.title)}</small><div class="rbtns" style="margin-top:5px">${t.btns.map(b=>btn(b[0],b[1],b[2],id)).join("")}</div></div>`).join("")+`</div>`;});
+  const drv=[NUM.driver,NUM.both,NUM.off].map(n=>{const a=S.accounts[n];return `<div class="rrow"><span>${esc(a.name)}<br><small>Driver access ${a.driver==="on"?"on":"off"}</small></span>${btn(a.driver==="on"?"Turn off":"Turn on","portalToggle",n)}</div>`}).join("");
+  const am=S.accounts[NUM.amelia];
+  h+=`<div class="rsec">Backend portal</div><div class="rcard">${drv}${am?`<div class="rrow"><span>Amelia Hart<br><small>${am.driver==="on"?"Also a driver":"Customer only"}</small></span>${btn(am.driver==="on"?"Remove driver":"Make driver","portalToggle",NUM.amelia)}</div>`:`<small>Amelia's account was deleted. Tap Start again to restore it.</small>`}<small>Own-delivery warning: Bilal's booking NG7 2QT is on today's route, so he can't sign its proof.</small></div>`;
+  h+=`<div class="rsec">Driver phone signal</div><div class="rcard"><div class="rbtns">${btn(S.drv.online?"Lose signal":"Get signal back","netToggle")}${btn("Replay splash on both","splashAgain")}</div></div>`;
+  h+=`<div class="rsec">Tracking IDs and QR codes</div>`+ids.map(x=>`<div class="rcard"><div class="rrow"><span><strong style="font-size:11.5px">${x[0]}</strong><br><small>${esc(x[1])}</small></span>${btn("Open","railTrack",x[0])}</div></div>`).join("");
+  Object.entries(FEATURES).forEach(([g,arr])=>{h+=`<div class="rsec">${g}</div>`+arr.map(f=>`<button class="feat ${cur.has(f[0])?"on":""}" type="button" data-a="jump" data-v="${f[0]}"><code>${f[0]}</code><span>${esc(f[1])}</span><em class="${S.seen.has(f[0])?"seen":""}">${S.seen.has(f[0])?"✓ ":""}${f[2]}</em></button>`).join("");});
+  h+=`<div class="rsec">Not real in this prototype</div><div class="rcard"><small>WhatsApp codes, payments, camera, QR reading, calls, sat-nav, maps and prices are simulated. Prices use made-up rates.</small></div>`;
+  const el=document.getElementById("rail"),top=el.scrollTop;el.innerHTML=h;el.scrollTop=top;
+  const total=Object.values(FEATURES).flat().length;
+  document.getElementById("prog-text").textContent=`${S.seen.size} of ${total} features viewed`;
+  document.getElementById("prog-bar").style.width=(S.seen.size/total*100)+"%";
+  document.getElementById("onscreen").textContent=cur.size?`On screen now: ${[...cur].join(", ")}`:"Tap through either phone, or use the test panel.";
+  document.getElementById("label-a").textContent=`Phone · ${modeName(S.phones.a)}${S.phones.a.number&&me(S.phones.a)?` · ${me(S.phones.a).name}`:""}`;
+}
+function render(){const keep=P;syncRoles();renderPhone("a");renderRail();P=keep;}
+
+/* ---------- Signature ---------- */
+function testSig(){const c=document.createElement("canvas");c.width=620;c.height=260;const x=c.getContext("2d");x.strokeStyle="#172522";x.lineWidth=5;x.lineCap="round";x.beginPath();x.moveTo(70,170);x.bezierCurveTo(140,30,170,40,190,130);x.bezierCurveTo(205,190,250,150,290,90);x.bezierCurveTo(320,50,340,140,380,150);x.bezierCurveTo(430,160,480,90,560,100);x.stroke();return c.toDataURL();}
+function initSig(el){const cv=el.querySelector("[data-sig]");if(!cv)return;const x=cv.getContext("2d");x.lineWidth=5;x.lineCap="round";x.strokeStyle="#172522";
+  if(S.drv.pod.sig){const i=new Image();i.onload=()=>x.drawImage(i,0,0);i.src=S.drv.pod.sig;}
+  let draw=false;const at=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+  cv.addEventListener("pointerdown",e=>{draw=true;cv.setPointerCapture(e.pointerId);const[a,b]=at(e);x.beginPath();x.moveTo(a,b);});
+  cv.addEventListener("pointermove",e=>{if(!draw)return;const[a,b]=at(e);x.lineTo(a,b);x.stroke();});
+  const end=()=>{if(draw){draw=false;S.drv.pod.sig=cv.toDataURL();}};cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);}
+
+/* ---------- Actions ---------- */
+const cleanNum=v=>{let n=String(v).replace(/[\s()-]/g,"");if(n.startsWith("+44"))n="0"+n.slice(3);else if(n.startsWith("44"))n="0"+n.slice(2);return n;};
+function sendCodeTo(target){const code=String(Math.floor(100000+Math.random()*900000));P.otp={code,sentAt:Date.now(),expired:false,target,changing:P.otp.changing};P.form.code="";P.wa=code;P.err={};}
+const A={
+  menu(){shell.classList.toggle("menu");},view(v){shell.dataset.view=v;},reset(){S=freshState();P=S.phones.a;startSplash();},story(){runStory();},
+  splashAgain(){Object.values(S.phones).forEach(p=>{p._back=p.route;p.route="splash";});startSplash(true);},
+  closeSheet(){P.sheet=null;P.sheetClass="";},back(){back();},go(v){go(v);},goHome(){tab("home");},
+  tabTo(v){if(v==="__login"){P.pending=false;signOut();return;}tab(v);if(v==="messages")S.drv.unread=0;},
+  /* sign-in */
+  sendCode(){let n=cleanNum(P.form.phone);P.err={};if(!/^07\d{9}$/.test(n)){if(VALIDATE){P.err.phone="Enter a UK mobile number, like 07700 900118.";return;}n=TEST_TARGET;}else P.form.phone=n;P.otp.changing=false;sendCodeTo(n);go("otp");},
+  guest(){P.number=null;enterMode("guest");},
+  toLogin(){const keep=P.pending;signOut();P.pending=keep;},
+  fillCode(){P.form.code=P.wa;P.wa=null;A.verify();},waAgain(){P.wa=P.otp.code;},otpExpire(){P.otp.expired=true;},otpSkip(){P.otp.sentAt=0;},
+  resend(){sendCodeTo(P.otp.target);toast(P,"Code sent","We sent a new code on WhatsApp.");},
+  verify(){const v=P.form.code.replace(/\s/g,"");P.err={};if(VALIDATE){if(!/^\d{6}$/.test(v)){P.err.code="Enter the 6-digit code.";return;}if(P.otp.expired){P.err.code="This code has expired. Tap Resend code to get a new one.";return;}if(v!==P.otp.code){P.err.code="That code isn't right. Check WhatsApp and try again.";return;}}P.wa=null;
+    if(P.otp.changing){me().mobile=P.otp.target;P.otp.changing=false;P.stack=[];P.route="settings";toast(P,"Mobile number updated",`Now ${fmtNum(P.otp.target)}.`);return;}
+    if(P.otp.target===TEST_TARGET){P.form.code="";withBusy("Signing you in…",700,()=>{P.stack=[];P.route="testrole";});return;}
+    P.number=P.otp.target;withBusy("Signing you in…",700,routeAfterLogin);},
+  testPick(v){P.number=v==="driver"?NUM.driver:NUM.amelia;P.err={};enterMode(v);},
+  signupDone(){const n=P.form.name.trim()||(VALIDATE?"":"Test Customer");P.err={};if(n.length<2){P.err.name="Enter your name.";return;}S.accounts[P.number]=Object.assign(S.accounts[P.number]||acct(n),{name:n,customer:true});enterMode("customer");toast(P,"Welcome to AtlasMove","You can add an email any time in Settings.");},
+  pickRole(v){enterMode(v);},
+  switchMode(){const next=P.mode==="driver"?"customer":"driver";P.pending=false;enterMode(next);toast(P,`Now in ${next} mode`,next==="customer"&&S.drv.started&&!S.drv.finished?"Your route is still running.":"Switch back any time in Settings.");},
+  becomeCustomer(){const a=me();a.customer=true;enterMode("customer");toast(P,"Customer account ready","You can switch roles in Settings.");},
+  signOutAsk(){const d=P.mode==="driver",live=S.drv.started&&!S.drv.finished,q=S.drv.queue.length;P.sheetClass="";P.sheet=`<div class="dot ${d&&(live||q)?"fail":"now"}">${ic(d&&(live||q)?"alert":"logout")}</div><h2>Sign out of AtlasMove?</h2>${d&&live?`<p class="muted">Your route is still running. GPS stops while you are signed out, so customers will see an old location.</p>`:`<p class="muted">You'll need a new WhatsApp code to sign back in.</p>`}${d&&q?`<div class="note amber">${ic("off")}<span>${q} action${q>1?"s are":" is"} waiting to upload. They stay on this phone and upload when you have signal.</span></div>`:""}<button class="pill danger" type="button" data-a="signOut">Sign out</button><button class="pill ghost" type="button" data-a="closeSheet">Stay signed in</button>`;},
+  signOut(){signOut();},
+  deleteAsk(){const a=me();P.sheetClass="";P.sheet=`<div class="dot fail">${ic("alert")}</div><h2>Delete your customer account?</h2><p class="muted">This removes your customer profile and personal data we don't need to keep. Delivery and payment records may be kept where the law requires it.${a.driver==="on"?" Your driver access stays with dispatch.":""}</p><button class="pill danger" type="button" data-a="deleteDo">Delete my account</button><button class="pill ghost" type="button" data-a="closeSheet">Keep my account</button>`;},
+  deleteDo(){const a=me();a.customer=false;if(a.driver==="on"){enterMode("driver");toast(P,"Customer account deleted","You still have driver access.");}else{delete S.accounts[P.number];signOut();}},
+  editName(){P.form.newName=me().name;P.sheetClass="";P.sheet=`<h2>Your name</h2>${field("newName","Name")}<button class="pill lime" type="button" data-a="nameSave">Save</button><button class="pill ghost" type="button" data-a="closeSheet">Cancel</button>`;},
+  nameSave(){const n=P.form.newName.trim()||me().name;if(VALIDATE&&n.length<2)return;me().name=n;P.sheet=null;},
+  goChange(){P.form.newPhone="";go("changeNumber");},
+  changeSend(){let n=cleanNum(P.form.newPhone);P.err={};if(!/^07\d{9}$/.test(n)){if(VALIDATE){P.err.newPhone="Enter a UK mobile number, like 07700 900118.";return;}n=NUM.fresh;}P.otp.changing=true;sendCodeTo(n);go("otp");},
+  goEmail(){P.form.email=me().email||"";go("email");},
+  emailSave(){const e=P.form.email.trim()||(VALIDATE?"":"test@example.com"),a=me();P.err={};if(VALIDATE&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){P.err.email="Enter a valid email address.";return;}P.form.email=e;if(e!==a.email){a.email=e;a.emailVerified=false;toast(P,"Check your email",`We sent a link to ${e}.`);}},
+  emailVerify(){const a=me();a.emailVerified=true;a.prefs.email=true;toast(P,"Email verified","Receipts and updates can now go there.");},
+  emailRemove(){const a=me();a.email=null;a.emailVerified=false;a.prefs.email=false;P.form.email="";},
+  prefToggle(v){const a=me();a.prefs[v]=!a.prefs[v];},
+  /* test-panel */
+  quick(v){P.number=v;P.wa=null;P.form.phone=v;if(S.accounts[v]&&S.accounts[v].driver==="on"&&S.accounts[v].customer)S.accounts[v].lastMode=null;routeAfterLogin();},
+  validationToggle(){VALIDATE=!VALIDATE;Object.values(S.phones).forEach(p=>p.err={});},
+  portalToggle(v){const a=S.accounts[v];a.driver=a.driver==="on"?(v===NUM.amelia?null:"off"):"on";if(a.driver!=="on"&&a.lastMode==="driver")a.lastMode=null;},
+  netToggle(){const d=S.drv;d.online=!d.online;if(d.online&&d.queue.length){const n=d.queue.length;d.queue.forEach(f=>f());d.queue=[];Object.values(S.phones).forEach(p=>{if(p.mode==="driver")toast(p,`${n} action${n>1?"s":""} uploaded`,"Nothing was lost while you had no signal.");});}},
+  railTrack(v){P=S.phones.a;if(!P.mode||P.mode==="driver"){P.number=null;enterMode("guest");}A.openTrack(v);},
+  jump(v){jump(v);shell.classList.remove("menu");},
+  /* driver */
+  openStop(v){const d=S.drv;d.stopIdx=Number(v);d.pod={scan:{},sig:null,photos:0};d.fail={reason:null,photos:0};P.form.podName=S.cons[S.stops[d.stopIdx].ref].receiver;P.form.failNote="";go("stop");},
+  vAllOk(){const d=S.drv;d.vdone=true;d.defect=false;back();toast(P,"Vehicle check saved","No defects.");},
+  vItem(v){S.drv.vcheck[v]=!S.drv.vcheck[v];},vDefect(){S.drv.defect=!S.drv.defect;},
+  vDone(){const d=S.drv;d.vdone=true;if(d.defect)d.msgs.push({me:true,t:hhmm(),x:"Vehicle check: defect reported on TE57 AMV."});back();toast(P,"Vehicle check saved",d.defect?"Dispatch has been told about the defect.":"No defects.");},
+  crewPick(v){S.drv.crew=v;back();},dmgPhoto(v){S.drv.dmg[v]=(S.drv.dmg[v]||0)+1;},
+  scanOk(){const d=S.drv,n=allLabels().find(l=>!d.scanned[l]);if(!n)return;d.scanned[n]=true;S.clock+=1;d.scanMsg={text:`Scanned ${n}.`};const c=S.stops.map(s=>S.cons[s.ref]).find(k=>k.items.includes(n));if(c&&c.items.every(l=>d.scanned[l])&&c.status==="assigned")commit(()=>{c.status="collected";addEvent(c.ref,"Collected");notify(c.ref,"Your delivery has been collected",`${c.summary} is now with AtlasMove.`);});if(!allLabels().find(l=>!d.scanned[l])){d.scanMsg=null;if(!d.collected)A.collected();}},
+  scanAll(){const d=S.drv;let g=0;while(allLabels().some(l=>!d.scanned[l])&&g++<40)A.scanOk();},
+  scanBad(){S.drv.scanMsg={bad:true,text:"This label belongs to a different route. Don't load this piece, and tell dispatch."};},
+  scanMissing(){const d=S.drv,n=allLabels().find(l=>!d.scanned[l]);d.msgs.push({me:true,t:hhmm(),x:`Missing at collection: ${n||"a piece"}.`});d.scanMsg={bad:true,text:`Dispatch has been told ${n||"a piece"} is missing. You can't complete the collection until it is found or dispatch removes it.`};},
+  collected(){const d=S.drv;d.collected=true;S.stops.forEach(s=>{const c=S.cons[s.ref];c.status="loaded";addEvent(c.ref,"Loaded");});tab("home");toast(P,"Collection complete","Everything is scanned and loaded.");},
+  startAsk(){P.sheetClass="";P.sheet=`<div class="dot now">${ic("pin")}</div><h2>Allow location during your route?</h2><p class="muted">Customers see your vehicle only during this route. GPS stops when you finish. Customers using AtlasMove are never asked for this.</p><button class="pill lime" type="button" data-a="startRoute">Allow and start</button><button class="pill ghost" type="button" data-a="startDeny">Don't allow</button>`;},
+  startDeny(){P.sheet=`<div class="dot fail">${ic("alert")}</div><h2>Location is needed to start</h2><p class="muted">Without it, customers can't get a live ETA. Allow location in your phone settings, or call dispatch.</p><button class="pill dark" type="button" data-a="closeSheet">Close</button>`;},
+  startRoute(){S.drv.started=true;P.sheet=null;S.clock+=5;S.stops.forEach(s=>{const c=S.cons[s.ref];c.status="in_transit";addEvent(c.ref,"In transit");const e=etaFor(c.ref);notify(c.ref,"Your route has started",`Estimated arrival ${e?hhmm(e.at):"soon"}.`);});tab("home");toast(P,"Route started","GPS is live.");},
+  stopSheet(v){const c=S.cons[S.stops[S.drv.stopIdx].ref];P.sheetClass="";if(v==="nav")P.sheet=`<h2>Navigate to ${esc(c.postcode)}</h2><p class="muted">${esc(c.address)}</p>${["Apple Maps","Google Maps","Waze"].map(x=>`<button class="pill ghost" type="button" data-a="openExt" data-v="${x}">${x}</button>`).join("")}<button class="pill dark" type="button" data-a="closeSheet">Cancel</button>`;else P.sheet=`<h2>Call ${esc(c.receiver)}</h2><p class="muted">${esc(c.contact)}</p><button class="pill lime" type="button" data-a="openExt" data-v="Phone">${ic("phone")} Call now</button><button class="pill dark" type="button" data-a="closeSheet">Cancel</button>`;},
+  openExt(v){P.sheet=null;toast(P,`Opening ${v}`,"This would leave the AtlasMove app.");},
+  approach(){const s=S.stops[S.drv.stopIdx],c=S.cons[s.ref];if(S.drv.stopIdx===S.leg)S.legProgress=Math.max(S.legProgress,.9);commit(()=>{if(c.status!=="approaching"){c.status="approaching";addEvent(c.ref,"Approaching");const e=etaFor(c.ref);notify(c.ref,"Your delivery is approaching",`The vehicle is expected at about ${e?hhmm(e.at):"soon"}.`);}});toast(P,"15 minutes away","The customer has been told.");},
+  arrive(){const i=S.drv.stopIdx,s=S.stops[i],c=S.cons[s.ref];if(i===S.leg){S.clock+=S.stops[i].min*(1-S.legProgress);S.legProgress=1;}s.state="arrived";s.arrivedAt=hhmm();commit(()=>{addEvent(c.ref,"Vehicle arrived");if(c.status!=="approaching")c.status="approaching";});},
+  podScanAll(){const d=S.drv,c=S.cons[S.stops[d.stopIdx].ref];c.items.forEach(l=>d.pod.scan[l]=true);},sigClear(){S.drv.pod.sig=null;},sigTest(){S.drv.pod.sig=testSig();},podPhoto(){S.drv.pod.photos++;},
+  podSubmit(){const d=S.drv,i=d.stopIdx,s=S.stops[i],c=S.cons[s.ref],p=d.pod,name=P.form.podName.trim();P.err={};if(VALIDATE){if(!c.items.every(l=>p.scan[l]))P.err.pod="Scan every piece before submitting.";else if(name.length<2)P.err.podName="Enter the receiver's name.";else if(!p.sig)P.err.pod="Ask the receiver to sign.";else if(p.photos<1)P.err.pod="Add at least one delivery photo.";if(Object.keys(P.err).length)return;}
+    const signer=name||TEST_DEFAULTS.podName;s.state="delivered";d.localPod[c.ref]=signer;const pod={name:signer,at:stamp(),sig:p.sig||testSig(),photos:p.photos||1,gps:"Recorded by phone"};S.clock+=6;advanceLeg(i);commit(()=>{c.pod=pod;c.status="delivered";addEvent(c.ref,"Delivered");notify(c.ref,"Delivery completed",`${c.summary} has been delivered and signed for.`);});afterStop();toast(P,d.online?"Proof of delivery saved":"Saved on this phone",d.online?"The customer has been told.":"It will upload when you have signal.");},
+  failReason(v){S.drv.fail.reason=v;},failPhoto(){S.drv.fail.photos++;},
+  failSubmit(){const d=S.drv,f=d.fail,i=d.stopIdx,s=S.stops[i],c=S.cons[s.ref];P.err={};if(VALIDATE){if(!f.reason){P.err.fail="Choose what happened.";return;}if(f.photos<1){P.err.fail="Add a photo of the location.";return;}}s.state="failed";const fl={reason:f.reason||"Receiver not home",at:stamp()};S.clock+=4;advanceLeg(i);commit(()=>{c.failure=fl;c.status="delivery_failed";addEvent(c.ref,`Delivery attempted: ${fl.reason}`);notify(c.ref,"Your delivery needs attention",`${fl.reason}. AtlasMove dispatch has been alerted.`);});d.msgs.push({me:true,t:hhmm(),x:`Failed delivery at ${c.postcode}: ${fl.reason}.`});afterStop();toast(P,"Failed delivery recorded","Dispatch has been alerted.");},
+  finishRoute(){S.drv.finished=true;S.drv.finishedAt=hhmm();tab("home");toast(P,"Route finished","GPS has stopped.");},
+  quickMsg(v){const d=S.drv;d.msgs.push({me:true,t:hhmm(),x:v});const ms=FAST?0:900;setTimeout(()=>{d.msgs.push({me:false,t:hhmm(),x:"Thanks, noted. I'll update the customer if needed."});render();},ms);},
+  sendMsg(){const v=P.form.msg.trim();if(!v)return;P.form.msg="";A.quickMsg(v);},
+  dispatchNote(){const c=S.cons[HERO];c.notes+=" Customer asks: ring the bell twice.";S.drv.msgs.push({me:false,t:hhmm(),x:"Added an access note to NN1 4AB. Please check it before you arrive."});toast(P,"Message from dispatch","Access note added to NN1 4AB.");},
+  histOpen(v){const j=v.split("|");P.sheetClass="";P.sheet=`<p class="kicker">${esc(j[0])}</p><h2>${esc(j[1])}</h2><div class="facts"><div><small>Outcome</small><strong>${esc(j[2])}</strong></div><div><small>Duration</small><strong>${esc(j[3])}</strong></div><div><small>Distance</small><strong>${esc(j[4])}</strong></div></div><button class="pill dark" type="button" data-a="closeSheet">Close</button>`;},
+  /* customer */
+  openInbox(){const a=me();if(a)a.unread=0;go("inbox");},
+  setF(v,el){P.form[el.dataset.k]=v;delete P.err[el.dataset.k];},
+  startQuote(){go("q1");},
+  moreToggle(){P.more=!P.more;},
+  pieces(v){P.form.pieces=String(Math.min(50,Math.max(1,Number(P.form.pieces)+Number(v))));},
+  bookNow(){if(!quoteReady())return;Object.assign(P.form,{from:qf().from,to:qf().to});if(P.mode==="guest"){A.guestBook();return;}prepQ5();go("q5");},
+  qFill(v){const f=P.form;Object.assign(f,{from:"BD8 7SG",to:"NN1 4AB",item:"Sofa or armchair",pieces:"2",weight:"51–85kg",service:"Room of choice",stairs:"1 flight",window:"Afternoon"});if(v==="review"){Object.assign(f,{weight:"Over 125kg or unsure",service:"Custom handling",item:"Other bulky goods",to:"IV2 3PY"});}P.err={};},
+  guestBook(){P.pending=true;signOutKeep();},
+    q5Next(){const f=P.form,e={};if(VALIDATE){if(f.fromAddr.trim().length<5)e.fromAddr="Choose or type the collection address.";if(f.toAddr.trim().length<5)e.toAddr="Choose or type the delivery address.";if(f.receiver.trim().length<5)e.receiver="Enter the receiver's mobile or email.";}else{f.fromAddr=f.fromAddr.trim()||TEST_DEFAULTS.fromAddr;f.toAddr=f.toAddr.trim()||TEST_DEFAULTS.toAddr;f.receiver=f.receiver.trim()||TEST_DEFAULTS.receiver;}P.err=e;if(Object.keys(e).length)return;const p=priceQuote(f),a=me();S.seq++;const b={id:`AMQ-${S.seq}`,status:p.review?"requested":"offered",route:`${normPc(f.from)} to ${normPc(f.to)}`,summary:`${f.pieces} × ${f.item}`,date:f.date,window:f.window,price:p.review?null:p.total,ref:null,log:{requested:hhmm()},form:{...f}};if(!p.review)b.log.offered=hhmm();a.bookings.unshift(b);P.bookingId=b.id;P.stack=["chome"];P.route=p.review?"booking":"pay";if(p.review)toast(P,"Request sent",`Reference ${b.id}. We'll send your price on WhatsApp.`);},
+  teamPrice(){const b=curBooking(),a=me();b.status="offered";b.price=285;b.log.offered=hhmm();a.inbox.unshift({booking:b.id,ref:null,title:"Your price is ready",body:`${b.id}: ${money(285)}`,at:stamp(),channel:channelText(a)});a.unread++;toast(P,"Your price is ready",`${b.id}: ${money(285)}`);},
+  payM(v){P.payMethod=v;delete P.err.pay;},cardFill(){Object.assign(P.form,{cardNo:"4242 4242 4242 4242",cardExp:"12/30",cardCvc:"123"});P.payMethod="card";},
+  payFail(){P.err.pay="Your bank declined this payment. Try another card. You have not been charged.";},
+  pay(){const f=P.form;P.err={};if(VALIDATE&&P.payMethod==="card"&&(f.cardNo.replace(/\s/g,"").length<15||!f.cardExp||!f.cardCvc)){P.err.cardNo=f.cardNo?"":"Enter your card number.";P.err.pay="Check your card details.";return;}withBusy("Confirming with Stripe…",1000,()=>{const b=curBooking(),a=me();b.status="confirmed";b.log.paid=hhmm();b.log.confirmed=hhmm();const hex=Array.from({length:12},()=>"0123456789ABCDEF"[Math.floor(Math.random()*16)]).join("");b.ref=`ATM-261118-${hex}`;const q=b.form,n=Number(q.pieces)||1,items=Array.from({length:n},(_,i)=>`AML-${hex.slice(0,4)}-${i+1} ${q.item}`);S.cons[b.ref]={ref:b.ref,owner:P.number,sender:a.name,status:"confirmed",events:[{t:stamp(),type:"Booking confirmed"}],date:b.date,window:b.window,notes:q.notes||"",stairs:q.stairs||"None",parking:"",accessPhotos:0,pod:null,failure:null,rating:null,claim:null,rebooked:null,paid:"Card ending 4242",price:b.price,receiver:q.name||a.name,contact:fmtNum(P.number),address:q.toAddr,postcode:normPc(q.to),summary:b.summary,items,specs:Object.fromEntries(items.map(l=>[l,"Size to confirm"]))};P.stack=["chome"];P.route="booking";a.inbox.unshift({ref:b.ref,title:"Your delivery is confirmed",body:`Tracking ID ${b.ref}.`,at:stamp(),channel:channelText(a)});a.unread++;toast(P,"Payment confirmed",`Tracking ID ${b.ref}`);});},
+  openBooking(v){P.bookingId=v;go("booking");},
+  trackGo(){const v=P.form.track.trim().toUpperCase();P.err={};if(!VALIDATE&&!S.cons[v]){A.openTrack(HERO);return;}if(!/^ATM-\d{6}-[A-F0-9]{12}$/.test(v)){P.err.track="Enter a full tracking ID, like ATM-261111-A1B2C3D4E5F6.";return;}if(!S.cons[v]){P.err.notfound="Those details don't match an active AtlasMove delivery. Check your confirmation message.";return;}A.openTrack(v);},
+  qrScan(v){if(v==="BAD"||!S.cons[v]){P.qrError="This QR code isn't an AtlasMove delivery. Try again or type your tracking ID.";return;}P.qrError=null;P.route="qr";A.openTrack(v);toast(P,"QR code read",v);},
+  openTrack(v){P.trackRef=v;if(P.route!=="result")go("result");else P.err={};},
+  pdf(){toast(P,"Proof saved","Saved to your Files app.");},
+  chatSend(){const v=P.form.chat.trim(),a=me();if(!v)return;P.form.chat="";a.chat.push({me:true,t:hhmm(),x:v});setTimeout(()=>{a.chat.push({me:false,t:hhmm(),x:"Thanks. A member of our Bradford team will reply here shortly."});render();},FAST?0:800);},
+  goChange2(){const c=S.cons[P.trackRef];P.form.changeNotes=c.notes;P.form.changeDate="";go("change");},
+  goInstr(){const c=S.cons[P.trackRef];P.form.parking=c.parking;P.form.stairsEdit=c.stairs;go("instr");},
+  goRebook(){go("rebook");},goRate(){P.rateDamagePhotos=0;go("rate");},
+  changeSave(){const c=S.cons[P.trackRef],f=P.form,locked=S.drv.started&&S.stops.some(s=>s.ref===c.ref);if(!locked){c.notes=f.changeNotes;if(f.changeDate)c.date=f.changeDate;addEvent(c.ref,"Customer updated delivery details");back();toast(P,"Changes saved","The driver will see the new notes.");}else{S.drv.msgs.push({me:false,t:hhmm(),x:`Customer at ${c.postcode} asked to change details: ${f.changeNotes}`});S.drv.unread++;back();toast(P,"Request sent to dispatch","They will contact you if it can't be done.");}},
+  instrSave(){const c=S.cons[P.trackRef],f=P.form;c.parking=f.parking;if(f.stairsEdit)c.stairs=f.stairsEdit;back();toast(P,"Sent to the driver","It now shows at your stop.");},
+  accessPhoto(){S.cons[P.trackRef].accessPhotos++;},
+  rebookPick(v){const c=S.cons[P.trackRef];c.rebooked=v;addEvent(c.ref,`New date requested: ${v}`);back();toast(P,"New date requested",`${v}. Dispatch will confirm it.`);},
+  star(v){const c=S.cons[P.trackRef];c.rating=Number(v);toast(P,"Thank you","Your rating has been sent.");},
+  damagePhoto(){P.rateDamagePhotos++;},
+  rateSend(){const c=S.cons[P.trackRef];if(VALIDATE&&P.rateDamagePhotos<1){P.err.rate="Add a photo of the damage.";return;}c.claim=`CLM-${Math.floor(1000+Math.random()*9000)}`;toast(P,"Damage report opened",`Reference ${c.claim}.`);},
+  repeat(v){const c=S.cons[v];A.qFill("standard");Object.assign(P.form,{to:c.postcode,toAddr:c.address,date:""});go("q1");toast(P,"Details copied","Your price is ready.");},
+  invoice(v){const c=S.cons[v];P.sheetClass="";P.sheet=`<p class="kicker">Invoice</p><h2>${money(c.price)}</h2><p class="muted">${esc(c.summary)} · ${esc(c.date)}</p><div class="facts"><div><small>Tracking ID</small><strong>${esc(c.ref)}</strong></div><div><small>Paid by</small><strong>${esc(c.paid)}</strong></div></div><p class="muted">BXT Logistics Limited · Company 16762302</p><button class="pill dark" type="button" data-a="closeSheet">Close</button>`;},
+  shutter(v){const[a,val]=v.split("|");P.sheet=null;P.sheetClass="";A[a](val||undefined);}
+};
+function signOutKeep(){P.number=null;P.mode=null;P.stack=[];P.route="login";P.sheet=null;P.err={};P.form.phone="";P.form.code="";}
+
+/* ---------- Fast-forward for feature shortcuts ---------- */
+function quickOn(id,num,mode){P=S.phones[id];P.number=num;P.wa=null;P.pending=false;if(mode)enterMode(mode);else routeAfterLogin();if(mode==="driver"&&P.route==="splash")P.route="home";}
+function ffDriver(){if(S.phones.a.mode!=="driver")quickOn("a",NUM.driver,"driver");P=S.phones.a;}
+function ffScanned(){ffDriver();const d=S.drv;allLabels().forEach(l=>d.scanned[l]=true);S.stops.forEach(s=>{const c=S.cons[s.ref];if(c.status==="assigned"){c.status="collected";addEvent(c.ref,"Collected");}});}
+function ffCollected(){ffScanned();if(!S.drv.collected)A.collected();}
+function ffStarted(){ffCollected();if(!S.drv.started)A.startRoute();P.toast=null;Object.values(S.phones).forEach(p=>p.toast=null);}
+function ffArrive(){ffStarted();let i=nextStopIdx();const d=S.drv;d.stopIdx=i<0?0:i;d.pod={scan:{},sig:null,photos:0};d.fail={reason:null,photos:0};P.form.podName=S.cons[S.stops[d.stopIdx].ref].receiver;if(S.stops[d.stopIdx].state==="pending")A.arrive();}
+function dPush(r){ffDriver();P.stack=["home"];P.route=r;P.err={};P.sheet=null;}
+function custOn(mode="customer"){if(S.phones.a.number!==NUM.amelia||S.phones.a.mode!==mode){if(mode==="guest"){P=S.phones.a;P.number=null;enterMode("guest");}else quickOn("a",NUM.amelia,"customer");}P=S.phones.a;}
+function cPush(r){custOn();P.stack=["chome"];P.route=r;P.err={};P.sheet=null;}
+function jump(id){
+  const m={
+    A1(){A.splashAgain();},A2(){P=S.phones.a;signOut();},A3(){P=S.phones.a;P.number=NUM.fresh;delete S.accounts[NUM.fresh];P.mode=null;P.stack=[];P.route="signup";P.form.name="";},A4(){custOn("guest");tab("chome");},A5(){custOn();tab("settings");},A6(){P=S.phones.a;S.accounts[NUM.both].lastMode=null;P.number=NUM.both;P.mode=null;routeAfterLogin();},A7(){P=S.phones.a;P.number=NUM.off;P.mode=null;routeAfterLogin();},
+    D1(){P=S.phones.a;signOut();P.form.phone=fmtNum(NUM.driver);},D2(){ffDriver();tab("home");},D3(){ffDriver();S.drv.stopIdx=2;dPush("stop");},D4(){ffDriver();S.drv.stopIdx=2;dPush("stop");A.stopSheet("nav");},D5(){ffDriver();dPush("collect");},D6(){ffCollected();tab("home");if(!S.drv.started)A.startAsk();},D7(){ffStarted();tab("home");},D8(){ffStarted();const i=nextStopIdx();S.drv.stopIdx=i<0?0:i;dPush("stop");},D9(){ffArrive();dPush("pod");},D10(){ffArrive();dPush("fail");},D11(){ffStarted();if(S.drv.online)A.netToggle();tab("home");},D12(){ffStarted();dPush("finish");},D13(){ffDriver();dPush("collect");},D14(){ffDriver();dPush("vcheck");},D15(){ffDriver();tab("messages");S.drv.unread=0;},D16(){ffDriver();dPush("crew");},D21(){ffDriver();tab("history");},
+    C1(){custOn();cPush("q1");},C15(){custOn();A.qFill("standard");cPush("q1");},C2(){custOn();P.bookingId="AMQ-2038";cPush("booking");},C3(){custOn();P.bookingId="AMQ-2039";cPush("pay");},C4(){custOn("guest");P.stack=[];P.route="track";},C5(){ffStarted();custOn();P.trackRef=HERO;cPush("result");},C6(){custOn();if(!me().inbox.length){ffStarted();custOn();}me().unread=0;cPush("inbox");},C7(){custOn();P.trackRef=DONE;cPush("proof");},C8(){custOn();cPush("help");},C9(){custOn();P.trackRef=HERO;A.goChange2();},C10(){custOn();if(!P.form.from)A.qFill("standard");P.more=true;cPush("q1");},C11(){custOn();P.trackRef=HERO;A.goInstr();},C12(){custOn();P.trackRef=MISSED;P.form.date="";cPush("rebook");},C13(){custOn();P.trackRef=DONE;A.goRate();},C14(){custOn();tab("bookings");},C16(){custOn();cPush("chat");},C17(){P=S.phones.a;P.number=NUM.biz;enterMode("customer");P.stack=["chome"];P.route="business";}
+  };
+  (m[id]||(()=>{}))();
+  if(id==="A1")return;
+  Object.values(S.phones).forEach(p=>{if(p.route==="splash")p.route=homeOf(p);});
+}
+function runStory(){S=freshState();FASTSPLASH=true;ffStarted();P=S.phones.a;S.drv.stopIdx=0;dPush("stop");toast(S.phones.a,"Main story","Deliver a stop, then tap Customer in the test panel to see Amelia's tracking update.");}
+let FASTSPLASH=false;
+
+/* ---------- Splash timing ---------- */
+let splashTimer=null;
+function startSplash(restore){clearTimeout(splashTimer);render();splashTimer=setTimeout(()=>{Object.values(S.phones).forEach(p=>{if(p.route==="splash"){p.route=restore&&p._back&&p._back!=="splash"?p._back:homeOf(p);}});render();},FAST?0:2300);}
+
+/* ---------- Events ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-a]");if(!t)return;
+  if(t.dataset.bg&&e.target!==t)return;
+  const scr=t.closest("[data-phone]");
+  P=S.phones.a;
+  if(t.matches(".photo.add")&&!FAST){const v=t.dataset.v;P.sheetClass="camera";P.sheet=`<div class="viewfinder"><span>Hold steady and tap the button</span></div><button class="shutter" type="button" data-a="shutter" data-v="${esc(t.dataset.a)}|${esc(v??"")}" aria-label="Take photo"></button><button class="pill ghostd" type="button" data-a="closeSheet">Cancel</button>`;render();return;}
+  const fn=A[t.dataset.a];if(!fn)return;
+  fn(t.dataset.v,t);render();
+});
+document.addEventListener("input",e=>{
+  const p=e.target.dataset?.bind;if(!p)return;
+  const parts=p.split("."),key=parts[2];P=S.phones[parts[0]];P.form[key]=e.target.value;
+  if(key==="code"&&/^\d{6}$/.test(e.target.value.trim())){P.wa=null;A.verify();render();return;}
+  if(key==="track"&&/^ATM-\d{6}-[A-F0-9]{12}$/i.test(e.target.value.trim())){A.trackGo();render();return;}
+  if(P.route==="q1"&&(key==="from"||key==="to")){const r=document.getElementById("phone-"+P.id),a=r.querySelector("[data-price]"),b=r.querySelector(".foot");if(a)a.innerHTML=priceCard();if(b)b.innerHTML=priceCta();}
+});
+
+/* ---------- Clock: moves the vehicle without redrawing forms ---------- */
+setInterval(()=>{
+  let moved=false;
+  Object.values(S.phones).forEach(p=>{const t=p.toast;if(t&&t.until<=Date.now()){p.toast=null;const el=document.querySelector(`#phone-${p.id} .toast:not(.wa)`);if(el)el.remove();}
+    if(p.route==="otp"){const b=document.querySelector(`#phone-${p.id} [data-resend]`);if(b){const left=Math.max(0,30-Math.floor((Date.now()-p.otp.sentAt)/1000));b.textContent=left>0?`Resend in ${left}s`:"Resend code";b.disabled=left>0;}}});
+  if(S.drv.started&&!S.drv.finished&&S.drv.online&&!document.hidden){
+    const s=S.stops[S.leg];if(s&&s.state==="pending"&&S.legProgress<.92){S.legProgress=Math.min(.92,S.legProgress+.006);S.clock+=s.min*.006;moved=true;}else S.clock+=.25;
+    document.querySelectorAll('[data-live="gps"]').forEach(el=>el.textContent=`Last sent ${hhmm()}`);
+  }
+  if(moved){
+    document.querySelectorAll("[data-veh]").forEach(v=>{const k=v.dataset.veh,q=lerp(k==="all"?drvFrac():custFrac(Number(k)));v.setAttribute("transform",`translate(${q.x} ${q.y})`);});
+    Object.values(S.phones).forEach(p=>{if(p.route!=="result"||!p.trackRef)return;const e=etaFor(p.trackRef);if(!e)return;const r=document.getElementById("phone-"+p.id);const a=r.querySelector('[data-live="eta"]'),m=r.querySelector('[data-live="rem"]'),g=r.querySelector('[data-live="gpsc"]');if(a)a.textContent=hhmm(e.at);if(m)m.textContent=`${e.rem} min remaining`;if(g)g.textContent=`Vehicle updated ${hhmm()}`;});
+  }
+},1000);
+
+startSplash();
+</script>
+</body>
+</html>
